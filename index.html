@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Drop Global v10</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#060606;--s1:#0c0c0c;--s2:#121212;--s3:#1a1a1a;--s4:#222;
+  --b1:#1e1e1e;--b2:#2a2a2a;--b3:#363636;
+  --t1:#f0f0f0;--t2:#a0a0a0;--t3:#666;--t4:#404040;
+  --ac:#c9a84c;--ac2:#e8c96a;--ac3:rgba(201,168,76,.12);
+  --gr:#4caf50;--rd:#ef5350;--bl:#4a9eff;--pu:#b39ddb;
+  --mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+  --r:4px;--tr:all .15s ease;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);font-size:13px;min-height:100vh;line-height:1.5;}
+a{color:var(--ac);text-decoration:none;}
+button{cursor:pointer;font-family:var(--sans);}
+input,select,textarea{font-family:var(--sans);}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--s2);}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.sidebar{background:var(--s1);border-right:1px solid var(--b1);padding:0;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.main{overflow-x:hidden;}
+
+/* ── SIDEBAR ── */
+.sb-logo{padding:1.5rem 1.25rem 1rem;border-bottom:1px solid var(--b1);}
+.sb-logo-eye{font-family:var(--mono);font-size:8px;color:var(--ac);letter-spacing:.25em;text-transform:uppercase;margin-bottom:5px;}
+.sb-logo-name{font-size:22px;font-weight:300;letter-spacing:-.03em;}
+.sb-logo-name b{color:var(--ac);font-weight:400;}
+.sb-logo-ver{font-family:var(--mono);font-size:8px;color:var(--t4);margin-top:3px;}
+
+.sb-stats{padding:1rem 1.25rem;border-bottom:1px solid var(--b1);display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.sb-stat{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:8px 10px;}
+.sb-stat-val{font-family:var(--mono);font-size:15px;font-weight:500;display:block;line-height:1;}
+.sb-stat-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-top:4px;display:block;}
+
+.sb-nav{flex:1;padding:.75rem 0;}
+.sb-section{font-family:var(--mono);font-size:8px;color:var(--t4);letter-spacing:.15em;text-transform:uppercase;padding:.5rem 1.25rem .25rem;margin-top:.5rem;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:.6rem 1.25rem;cursor:pointer;transition:var(--tr);color:var(--t3);font-size:12px;border-left:2px solid transparent;position:relative;}
+.sb-item:hover{color:var(--t1);background:var(--s2);}
+.sb-item.active{color:var(--ac);background:var(--ac3);border-left-color:var(--ac);}
+.sb-item-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0;}
+.sb-item-badge{margin-left:auto;font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:2px;background:var(--ac3);color:var(--ac);}
+.sb-item-badge.gr{background:rgba(76,175,80,.12);color:var(--gr);}
+.sb-item-badge.rd{background:rgba(239,83,80,.12);color:var(--rd);}
+
+.sb-bottom{padding:1rem 1.25rem;border-top:1px solid var(--b1);}
+.sb-sync{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--t3);}
+.sb-sync-dot{width:6px;height:6px;border-radius:50%;background:var(--gr);flex-shrink:0;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ── MAIN CONTENT ── */
+.page{display:none;padding:2rem;}
+.page.active{display:block;}
+
+/* ── PAGE HEADER ── */
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.75rem;}
+.ph-left{}
+.ph-eye{font-family:var(--mono);font-size:8px;color:var(--ac);letter-spacing:.2em;text-transform:uppercase;margin-bottom:5px;}
+.ph-title{font-size:24px;font-weight:300;letter-spacing:-.03em;}
+.ph-sub{font-size:12px;color:var(--t2);margin-top:4px;}
+.ph-right{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);}
+.card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center;}
+.card-title{font-family:var(--mono);font-size:9px;color:var(--t2);letter-spacing:.12em;text-transform:uppercase;}
+.card-body{padding:1.25rem;}
+.card+.card{margin-top:1rem;}
+
+/* ── FORM ── */
+.field{margin-bottom:1rem;}
+.field:last-child{margin-bottom:0;}
+.field-label{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t2);margin-bottom:6px;}
+.field-label .badge{font-size:8px;padding:2px 6px;border-radius:2px;}
+.field-label .badge-ai{background:rgba(179,157,219,.15);color:var(--pu);}
+.field-label .badge-req{background:rgba(239,83,80,.12);color:var(--rd);}
+.field-label .badge-opt{background:var(--s3);color:var(--t3);}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+input[type=text],input[type=password],input[type=email],select,textarea{
+  width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);
+  padding:9px 12px;font-size:12px;font-family:var(--mono);color:var(--t1);
+  outline:none;transition:border .15s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--ac);}
+input::placeholder,textarea::placeholder{color:var(--t4);}
+input.valid{border-color:var(--gr);}
+select option{background:var(--s2);}
+textarea{resize:vertical;min-height:80px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r);border:1px solid var(--b2);background:transparent;color:var(--t2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:var(--tr);letter-spacing:.05em;white-space:nowrap;}
+.btn:hover{color:var(--t1);background:var(--s3);border-color:var(--b3);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn-primary{background:var(--ac);color:#000;border-color:var(--ac);font-weight:500;}
+.btn-primary:hover{background:var(--ac2);border-color:var(--ac2);color:#000;}
+.btn-full{width:100%;justify-content:center;padding:13px;font-size:11px;letter-spacing:.12em;}
+.btn-sm{padding:5px 10px;font-size:9px;}
+.btn-danger{border-color:rgba(239,83,80,.2);color:var(--rd);}
+.btn-danger:hover{background:rgba(239,83,80,.08);border-color:var(--rd);}
+.btn-green{background:rgba(76,175,80,.1);color:var(--gr);border-color:rgba(76,175,80,.2);}
+.btn-blue{background:rgba(74,158,255,.1);color:var(--bl);border-color:rgba(74,158,255,.2);}
+.btn-purple{background:rgba(179,157,219,.1);color:var(--pu);border-color:rgba(179,157,219,.2);}
+
+/* ── NICHO GRID ── */
+.nicho-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.nicho-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:1rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.nicho-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--ac3) 0%,transparent 100%);opacity:0;transition:opacity .2s;}
+.nicho-card:hover::before,.nicho-card.active::before{opacity:1;}
+.nicho-card.active{border-color:var(--ac);}
+.nicho-card.active::after{content:'✓';position:absolute;top:10px;right:10px;font-size:10px;color:var(--ac);font-family:var(--mono);}
+.nc-icon{font-size:26px;margin-bottom:8px;}
+.nc-name{font-size:13px;font-weight:500;margin-bottom:3px;}
+.nc-refs{font-size:10px;color:var(--t3);line-height:1.5;}
+.nc-badge{display:inline-block;font-family:var(--mono);font-size:8px;padding:2px 6px;background:var(--ac3);color:var(--ac);border-radius:2px;margin-top:6px;}
+
+/* ── QTY SELECTOR ── */
+.qty-row{display:flex;gap:8px;}
+.qty-opt{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:8px 18px;font-family:var(--mono);font-size:12px;color:var(--t2);cursor:pointer;transition:var(--tr);text-align:center;}
+.qty-opt:hover{border-color:var(--b3);color:var(--t1);}
+.qty-opt.active{border-color:var(--ac);color:var(--ac);background:var(--ac3);}
+.qty-opt-sub{font-size:8px;color:var(--t4);display:block;margin-top:2px;}
+
+/* ── UPLOAD ── */
+.upload-zone{border:1px dashed var(--b2);border-radius:var(--r);padding:1.5rem;text-align:center;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden;}
+.upload-zone:hover{border-color:var(--ac);background:var(--ac3);}
+.upload-zone.filled{border-color:var(--gr);border-style:solid;}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-zone-icon{font-size:22px;color:var(--t4);margin-bottom:6px;}
+.upload-zone-label{font-size:11px;color:var(--t2);margin-bottom:3px;}
+.upload-zone-sub{font-family:var(--mono);font-size:9px;color:var(--t4);}
+.upload-zone-preview{width:100%;height:80px;object-fit:cover;border-radius:3px;display:none;margin-top:8px;}
+.upload-zone.filled .upload-zone-preview{display:block;}
+.upload-zone.filled .upload-zone-icon,.upload-zone.filled .upload-zone-label,.upload-zone.filled .upload-zone-sub{display:none;}
+
+/* ── PRODUTO UPLOAD ITEM ── */
+.prod-item{display:flex;align-items:center;gap:12px;padding:.75rem;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:6px;transition:border .15s;}
+.prod-item:hover{border-color:var(--b2);}
+.prod-num{font-family:var(--mono);font-size:10px;color:var(--ac);min-width:28px;text-align:center;}
+.prod-info{flex:1;min-width:0;}
+.prod-title{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prod-meta{display:flex;align-items:center;gap:8px;margin-top:3px;}
+.prod-price{font-family:var(--mono);font-size:11px;color:var(--ac);}
+.prod-compare{font-family:var(--mono);font-size:10px;color:var(--t4);text-decoration:line-through;}
+.prod-type{font-size:9px;color:var(--t3);}
+.prod-tag{font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:2px;}
+.prod-tag-acc{background:rgba(76,175,80,.12);color:var(--gr);}
+.prod-thumb{width:64px;height:64px;border:1px dashed var(--b2);border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;flex-shrink:0;transition:border .15s;}
+.prod-thumb:hover{border-color:var(--ac);}
+.prod-thumb.filled{border-color:var(--gr);border-style:solid;}
+.prod-thumb input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.prod-thumb img{width:100%;height:100%;object-fit:cover;display:none;}
+.prod-thumb.filled img{display:block;}
+.prod-thumb-plus{font-size:16px;color:var(--t4);pointer-events:none;}
+.prod-thumb-label{font-size:8px;color:var(--t4);margin-top:2px;font-family:var(--mono);pointer-events:none;}
+
+/* ── PROMPT BOX ── */
+.prompt-box{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:.875rem 1rem;font-family:var(--mono);font-size:10px;color:var(--t2);line-height:1.7;position:relative;}
+.prompt-copy-btn{position:absolute;top:8px;right:8px;font-size:8px;padding:3px 8px;}
+.prompt-label{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--mono);}
+
+/* ── TASKS ── */
+.tasks{display:flex;flex-direction:column;gap:2px;}
+.task{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:3px;transition:all .2s;color:var(--t4);}
+.task.running{color:var(--ac);background:var(--ac3);}
+.task.done{color:var(--gr);}
+.task.error{color:var(--rd);}
+.task-dot{width:16px;height:16px;border-radius:50%;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:7px;flex-shrink:0;}
+.task-ai-tag{margin-left:auto;font-size:8px;color:var(--pu);background:rgba(179,157,219,.1);padding:1px 5px;border-radius:2px;}
+
+/* ── PROGRESS ── */
+.prog-wrap{display:none;margin-top:1rem;}
+.prog-bar{height:2px;background:var(--b1);border-radius:1px;overflow:hidden;margin-bottom:8px;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));width:0%;transition:width .5s ease;}
+.prog-label{font-family:var(--mono);font-size:10px;color:var(--t3);margin-bottom:8px;}
+.log-box{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:.75rem;max-height:200px;overflow-y:auto;}
+.log-line{font-family:var(--mono);font-size:9px;color:var(--t3);padding:1.5px 0;display:flex;gap:8px;}
+.log-line .ts{color:var(--t4);min-width:56px;flex-shrink:0;}
+.log-line.ok .msg{color:var(--gr);}
+.log-line.err .msg{color:var(--rd);}
+.log-line.info .msg{color:var(--ac);}
+.log-line.ai .msg{color:var(--pu);}
+
+/* ── RESULT ── */
+.result{display:none;background:rgba(76,175,80,.05);border:1px solid rgba(76,175,80,.15);border-radius:var(--r);padding:1.25rem;margin-top:1rem;}
+.result h3{font-family:var(--mono);font-size:10px;color:var(--gr);letter-spacing:.1em;margin-bottom:8px;}
+.result p{font-size:12px;color:var(--t2);line-height:1.7;}
+
+/* ── INFO BOXES ── */
+.info{background:rgba(74,158,255,.05);border:1px solid rgba(74,158,255,.12);border-radius:var(--r);padding:.875rem 1rem;font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:1rem;}
+.info b{color:var(--bl);}
+.warn{background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.12);border-radius:var(--r);padding:.875rem 1rem;font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:1rem;}
+.warn b{color:var(--ac);}
+.ai-info{background:rgba(179,157,219,.05);border:1px solid rgba(179,157,219,.12);border-radius:var(--r);padding:.875rem 1rem;font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:1rem;display:flex;gap:10px;}
+.ai-info-icon{color:var(--pu);font-size:16px;flex-shrink:0;margin-top:1px;}
+
+/* ── FARM ── */
+.farm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem;}
+.farm-stat-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:1rem;text-align:center;}
+.farm-stat-val{font-family:var(--mono);font-size:22px;font-weight:500;display:block;line-height:1;}
+.farm-stat-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-top:6px;display:block;}
+.farm-row{display:flex;align-items:center;gap:12px;padding:1rem;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:8px;transition:border .15s;}
+.farm-row:hover{border-color:var(--b2);}
+.farm-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.farm-info{flex:1;min-width:0;}
+.farm-url{font-family:var(--mono);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.farm-meta{font-size:10px;color:var(--t3);margin-top:2px;}
+.farm-rev{text-align:right;flex-shrink:0;}
+.farm-rev-val{font-family:var(--mono);font-size:13px;font-weight:500;}
+.farm-rev-orders{font-size:9px;color:var(--t3);margin-top:2px;}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{font-family:var(--mono);font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;padding:0 8px 10px 0;text-align:left;border-bottom:1px solid var(--b1);font-weight:400;}
+.tbl td{padding:10px 8px 10px 0;border-bottom:1px solid var(--b1);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.pill{font-family:var(--mono);font-size:8px;padding:3px 8px;border-radius:2px;}
+.pill-ok{background:rgba(76,175,80,.12);color:var(--gr);}
+.pill-warn{background:rgba(201,168,76,.12);color:var(--ac);}
+.pill-err{background:rgba(239,83,80,.12);color:var(--rd);}
+.pill-hot{background:rgba(255,152,0,.12);color:#ff9800;}
+
+/* ── RANKING ── */
+.rank-item{display:flex;align-items:center;gap:14px;padding:1rem 0;border-bottom:1px solid var(--b1);}
+.rank-item:last-child{border-bottom:none;}
+.rank-pos{font-family:var(--mono);font-size:20px;min-width:40px;text-align:center;}
+.rank-bar-wrap{flex:1;}
+.rank-url{font-family:var(--mono);font-size:11px;margin-bottom:3px;}
+.rank-meta{font-size:10px;color:var(--t3);margin-bottom:6px;}
+.rank-bar-bg{height:3px;background:var(--b1);border-radius:2px;overflow:hidden;}
+.rank-bar-fill{height:100%;border-radius:2px;transition:width .8s ease;}
+.rank-vals{display:flex;gap:16px;margin-top:6px;}
+.rank-val{font-family:var(--mono);font-size:11px;}
+
+/* ── MODAL / OVERLAY ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:900;align-items:center;justify-content:center;}
+.overlay.show{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);width:90%;max-width:760px;max-height:85vh;overflow-y:auto;}
+.modal-header{padding:1rem 1.25rem;border-bottom:1px solid var(--b1);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--s1);z-index:1;}
+.modal-title{font-family:var(--mono);font-size:9px;color:var(--ac);letter-spacing:.15em;text-transform:uppercase;}
+.modal-body{padding:1.25rem;}
+
+/* ── NOTIF ── */
+.notif{position:fixed;top:1rem;right:1rem;background:var(--s1);border:1px solid var(--gr);border-radius:var(--r);padding:1rem 1.25rem;z-index:1000;max-width:300px;display:none;animation:slideIn .3s ease;}
+.notif.show{display:block;}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:none;}}
+.notif-title{font-family:var(--mono);font-size:8px;color:var(--gr);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px;}
+.notif-body{font-size:11px;color:var(--t2);}
+
+/* ── EMPTY ── */
+.empty{font-family:var(--mono);font-size:10px;color:var(--t4);text-align:center;padding:3rem 0;}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--b1);margin:1.25rem 0;}
+
+/* ── TOKEN STEPS ── */
+.tstep{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;}
+.tstep-num{width:24px;height:24px;border-radius:50%;background:var(--s3);border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--t2);flex-shrink:0;}
+.tstep-text{font-size:12px;color:var(--t2);line-height:1.6;padding-top:2px;}
+
+/* ── MOBILE BOTTOM NAV ── */
+.mobile-nav{display:none;}
+
+@media(max-width:768px){
+  .app{grid-template-columns:1fr;}
+  .sidebar{display:none;}
+  .main{padding-bottom:72px;}
+  .page{padding:1rem;}
+  .nicho-grid{grid-template-columns:1fr 1fr;}
+  .field-grid,.field-grid-3{grid-template-columns:1fr;}
+
+  /* No mobile mostra só farm/lojas/ranking */
+  #page-criar,#page-token,#page-guia{display:none!important;}
+  #page-farm,#page-lojas,#page-ranking{display:none;}
+  #page-farm.active,#page-lojas.active,#page-ranking.active{display:block;}
+
+  /* Farm stats compacto */
+  .farm-grid{grid-template-columns:1fr 1fr;gap:8px;}
+  .farm-stat-val{font-size:18px;}
+  .farm-row{padding:.75rem;gap:8px;}
+  .farm-url{font-size:10px;}
+
+  /* Tabela lojas mobile */
+  .tbl thead{display:none;}
+  .tbl tbody tr{display:block;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:8px;padding:.875rem;}
+  .tbl td{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border:none;font-size:12px;}
+  .tbl td:first-child{border-bottom:1px solid var(--b1);padding-bottom:8px;margin-bottom:4px;display:block;}
+
+  /* Ranking compacto */
+  .rank-item{padding:.75rem 0;gap:10px;}
+  .rank-pos{font-size:16px;min-width:32px;}
+
+  /* Page header */
+  .ph{flex-direction:column;gap:10px;margin-bottom:1.25rem;}
+  .ph-right{width:100%;}
+  .ph-right .btn{width:100%;justify-content:center;}
+  .ph-title{font-size:20px;}
+
+  /* Bottom Nav */
+  .mobile-nav{
+    display:flex;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    background:var(--s1);
+    border-top:1px solid var(--b1);
+    z-index:500;
+    height:64px;
+  }
+  .mobile-nav-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:4px;cursor:pointer;
+    color:var(--t4);border:none;background:transparent;
+    padding:8px 0;position:relative;transition:color .15s;
+  }
+  .mobile-nav-item.active{color:var(--ac);}
+  .mobile-nav-item.active::before{
+    content:'';position:absolute;top:0;left:25%;right:25%;
+    height:2px;background:var(--ac);
+  }
+  .mobile-nav-icon{font-size:22px;line-height:1;}
+  .mobile-nav-label{font-family:var(--mono);font-size:9px;letter-spacing:.04em;text-transform:uppercase;}
+
+  /* Stats bar mobile */
+  .mobile-stats{
+    display:flex;gap:6px;padding:.75rem;
+    background:var(--s1);border-bottom:1px solid var(--b1);
+    margin:-1rem -1rem 1rem;
+  }
+  .mobile-stat{flex:1;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:8px 4px;text-align:center;}
+  .mobile-stat-val{font-family:var(--mono);font-size:14px;font-weight:500;display:block;}
+  .mobile-stat-lbl{font-size:8px;color:var(--t4);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;display:block;}
+}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif">
+  <div class="notif-title">🔔 Nova venda!</div>
+  <div class="notif-body" id="notif-body"></div>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mobile-nav">
+  <button class="mobile-nav-item active" id="mnav-farm" onclick="mobileNav('farm',this)">
+    <span class="mobile-nav-icon">◈</span>
+    <span class="mobile-nav-label">Farm</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-lojas" onclick="mobileNav('lojas',this)">
+    <span class="mobile-nav-icon">◇</span>
+    <span class="mobile-nav-label">Lojas</span>
+  </button>
+  <button class="mobile-nav-item" id="mnav-ranking" onclick="mobileNav('ranking',this)">
+    <span class="mobile-nav-icon">◉</span>
+    <span class="mobile-nav-label">Ranking</span>
+  </button>
+</nav>
+
+<!-- MODAL PROMPTS -->
+<div class="overlay" id="modal-prompts">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">✦ Prompts para geração de imagens</span>
+      <button class="btn btn-sm btn-danger" onclick="closeModal('modal-prompts')">Fechar</button>
+    </div>
+    <div class="modal-body" id="modal-prompts-body"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-eye">Automação v10</div>
+      <div class="sb-logo-name">Drop <b>Global</b></div>
+      <div class="sb-logo-ver">Claude AI · Shopify · KV Sync</div>
+    </div>
+
+    <div class="sb-stats" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="sb-stat">
+        <span class="sb-stat-val" id="sb-total">0</span>
+        <span class="sb-stat-lbl">Lojas</span>
+      </div>
+      <div class="sb-stat">
+        <span class="sb-stat-val" style="color:#ff9800" id="sb-aquecendo">0</span>
+        <span class="sb-stat-lbl">Aquecendo</span>
+      </div>
+      <div class="sb-stat">
+        <span class="sb-stat-val" style="color:var(--gr)" id="sb-prontas">0</span>
+        <span class="sb-stat-lbl">Prontas</span>
+      </div>
+      <div class="sb-stat">
+        <span class="sb-stat-val" style="color:var(--ac)" id="sb-receita">$0</span>
+        <span class="sb-stat-lbl">Receita</span>
+      </div>
+      <div class="sb-stat">
+        <span class="sb-stat-val" style="color:var(--bl)" id="sb-pedidos">0</span>
+        <span class="sb-stat-lbl">Pedidos</span>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-section">Criação</div>
+      <div class="sb-item active" onclick="nav('criar',this)">
+        <span class="sb-item-icon">✦</span> Criar Loja
+        <span class="sb-item-badge">IA</span>
+      </div>
+
+      <div class="sb-section">Monitoramento</div>
+      <div class="sb-item" onclick="nav('farm',this)">
+        <span class="sb-item-icon">◈</span> Monitor Farm
+      </div>
+      <div class="sb-item" onclick="nav('lojas',this)">
+        <span class="sb-item-icon">◇</span> Minhas Lojas
+      </div>
+      <div class="sb-item" onclick="nav('ranking',this)">
+        <span class="sb-item-icon">◉</span> Ranking
+      </div>
+
+      <div class="sb-section">Configuração</div>
+      <div class="sb-item" onclick="nav('token',this)">
+        <span class="sb-item-icon">⚿</span> Gerar Token
+      </div>
+      <div class="sb-item" onclick="nav('guia',this)">
+        <span class="sb-item-icon">◎</span> Guia Rápido
+      </div>
+    </nav>
+
+    <div class="sb-bottom">
+      <div class="sb-sync">
+        <div class="sb-sync-dot" id="sync-dot"></div>
+        <span id="sync-label">Sincronizando com KV...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PAGE: CRIAR LOJA                       -->
+    <!-- ══════════════════════════════════════ -->
+    <div class="page active" id="page-criar">
+      <div class="ph">
+        <div class="ph-left">
+          <div class="ph-eye">Criação automatizada</div>
+          <div class="ph-title">Criar Loja com IA</div>
+          <div class="ph-sub">Loja profissional criada e editada automaticamente pelo Claude</div>
+        </div>
+      </div>
+
+      <!-- STEP 1: CONEXÃO -->
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <span class="card-title">01 — Conexão Shopify</span>
+          <span class="pill pill-warn">Obrigatório</span>
+        </div>
+        <div class="card-body">
+          <div class="field-grid">
+            <div class="field">
+              <div class="field-label">URL da loja <span class="badge badge-req">required</span></div>
+              <input id="c-url" type="text" placeholder="minha-loja.myshopify.com" oninput="valUrl(this)"/>
+            </div>
+            <div class="field">
+              <div class="field-label">Token Shopify <span class="badge badge-req">required</span></div>
+              <input id="c-token" type="password" placeholder="shpat_..."/>
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-label">Claude API Key <span class="badge badge-ai">★ IA turbinada</span></div>
+            <input id="c-claude" type="password" placeholder="sk-ant-api03-..."/>
+          </div>
+          <div class="ai-info">
+            <span class="ai-info-icon">★</span>
+            <div>Com a <b style="color:var(--pu)">Claude API</b> a IA cria nome de marca único, produtos com copy persuasivo, lê o tema Dawn real e edita de forma profissional baseada nas referências do nicho. Sem ela, usa dados padrão. Obtenha em <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: NICHO -->
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <span class="card-title">02 — Nicho & Referências</span>
+          <span class="pill pill-warn">Escolha um</span>
+        </div>
+        <div class="card-body">
+          <div class="nicho-grid" id="nicho-grid">
+            <div class="nicho-card active" data-nicho="jewelry" onclick="selNicho(this)">
+              <div class="nc-icon">💎</div>
+              <div class="nc-name">Bijuterias</div>
+              <div class="nc-refs">Mejuri · Pura Vida · Delani · Missoma · Gorjana</div>
+              <div class="nc-badge">Luxo & Elegância</div>
+            </div>
+            <div class="nicho-card" data-nicho="mens-slim" onclick="selNicho(this)">
+              <div class="nc-icon">👔</div>
+              <div class="nc-name">Masc. Slim</div>
+              <div class="nc-refs">Bonobos · Taylor Stitch · ALD · Todd Snyder · Buck Mason</div>
+              <div class="nc-badge">Sem logo</div>
+            </div>
+            <div class="nicho-card" data-nicho="womens-slim" onclick="selNicho(this)">
+              <div class="nc-icon">👗</div>
+              <div class="nc-name">Fem. Slim</div>
+              <div class="nc-refs">Good American · Princess Polly · Fashion Nova · Revolve · ASOS</div>
+              <div class="nc-badge">Sem logo</div>
+            </div>
+            <div class="nicho-card" data-nicho="sneakers" onclick="selNicho(this)">
+              <div class="nc-icon">👟</div>
+              <div class="nc-name">Tênis Sport</div>
+              <div class="nc-refs">NOBULL · Thursday · Beckett · Oliver Cabell · Atoms</div>
+              <div class="nc-badge">Sem logo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: QUANTIDADE -->
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <span class="card-title">03 — Número de produtos</span>
+          <span id="qty-total-badge" class="pill pill-ok">3 produtos + 5 acessórios = 8 total</span>
+        </div>
+        <div class="card-body">
+          <div class="qty-row" id="qty-row">
+            <div class="qty-opt active" data-qty="3" onclick="selQty(this)">
+              3<span class="qty-opt-sub">produtos</span>
+            </div>
+            <div class="qty-opt" data-qty="5" onclick="selQty(this)">
+              5<span class="qty-opt-sub">produtos</span>
+            </div>
+            <div class="qty-opt" data-qty="10" onclick="selQty(this)">
+              10<span class="qty-opt-sub">produtos</span>
+            </div>
+          </div>
+          <div class="info" style="margin-top:1rem;margin-bottom:0;">
+            <b>Sempre inclui 5 acessórios</b> de $1-$3 automaticamente — aumentam o ticket médio sem precisar de fotos obrigatórias.
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4: IMAGENS -->
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="card-header">
+          <span class="card-title">04 — Imagens da loja</span>
+          <button class="btn btn-sm btn-purple" onclick="abrirPrompts()">✦ Ver prompts do nicho</button>
+        </div>
+        <div class="card-body">
+          <div class="warn">
+            <b>Prompts prontos:</b> Clique em "Ver prompts" para gerar as imagens no Midjourney, DALL-E ou Nano Banana. Todas são opcionais — se não anexar, a IA cria alternativas automáticas.
+          </div>
+          <div class="field-grid-3">
+            <div class="field">
+              <div class="field-label">Logo da loja</div>
+              <div class="upload-zone" id="uz-logo">
+                <input type="file" accept="image/*" onchange="handleUpload(this,'uz-logo','logo')"/>
+                <div class="upload-zone-icon">◈</div>
+                <div class="upload-zone-label">Clique para anexar</div>
+                <div class="upload-zone-sub">PNG transparente · 400×100px</div>
+                <img class="upload-zone-preview" id="prev-logo"/>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">Banner Desktop</div>
+              <div class="upload-zone" id="uz-banner-d">
+                <input type="file" accept="image/*" onchange="handleUpload(this,'uz-banner-d','bannerD')"/>
+                <div class="upload-zone-icon">◫</div>
+                <div class="upload-zone-label">Banner desktop</div>
+                <div class="upload-zone-sub">1440 × 600px</div>
+                <img class="upload-zone-preview" id="prev-banner-d"/>
+              </div>
+            </div>
+            <div class="field">
+              <div class="field-label">Banner Mobile</div>
+              <div class="upload-zone" id="uz-banner-m">
+                <input type="file" accept="image/*" onchange="handleUpload(this,'uz-banner-m','bannerM')"/>
+                <div class="upload-zone-icon">◱</div>
+                <div class="upload-zone-label">Banner mobile</div>
+                <div class="upload-zone-sub">768 × 900px</div>
+                <img class="upload-zone-preview" id="prev-banner-m"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;">
+            <div class="field-label" style="margin-bottom:0;">Fotos dos produtos <span class="badge badge-opt">opcional</span></div>
+            <button class="btn btn-sm btn-purple" onclick="abrirPromptsProdutos()">✦ Prompts dos produtos</button>
+          </div>
+          <div id="prod-list"></div>
+        </div>
+      </div>
+
+      <!-- STEP 5: CRIAR -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">05 — Criar loja</span>
+          <span class="pill" id="ai-status-badge">IA: verificando...</span>
+        </div>
+        <div class="card-body">
+          <div class="tasks" id="tasks-list">
+            <div class="task" id="t0"><div class="task-dot">○</div>Limpar loja completamente (produtos, coleções, páginas, políticas, blog)</div>
+            <div class="task" id="t1"><div class="task-dot">○</div>Claude IA — criar marca, slogan e produtos únicos<span class="task-ai-tag">★ Claude</span></div>
+            <div class="task" id="t2"><div class="task-dot">○</div>Criar coleções do nicho</div>
+            <div class="task" id="t3"><div class="task-dot">○</div>Criar produtos com descrições persuasivas</div>
+            <div class="task" id="t4"><div class="task-dot">○</div>Upload das fotos dos produtos</div>
+            <div class="task" id="t5"><div class="task-dot">○</div>Criar páginas (About, FAQ, Size Guide, Contact, Track Order)</div>
+            <div class="task" id="t6"><div class="task-dot">○</div>Criar políticas legais completas</div>
+            <div class="task" id="t7"><div class="task-dot">○</div>Blog com artigos SEO únicos<span class="task-ai-tag">★ Claude</span></div>
+            <div class="task" id="t8"><div class="task-dot">○</div>Frete grátis configurado</div>
+            <div class="task" id="t9"><div class="task-dot">○</div>Detectar tema ativo</div>
+            <div class="task" id="t10"><div class="task-dot">○</div>Claude IA — ler tema real e gerar edições profissionais<span class="task-ai-tag">★ Claude</span></div>
+            <div class="task" id="t11"><div class="task-dot">○</div>Upload logo e banners no tema</div>
+            <div class="task" id="t12"><div class="task-dot">○</div>Reescrever homepage Dawn completa</div>
+            <div class="task" id="t13"><div class="task-dot">○</div>Injetar CSS em todo o site</div>
+            <div class="task" id="t14"><div class="task-dot">○</div>🎉 Loja profissional pronta!</div>
+          </div>
+
+          <button class="btn btn-primary btn-full" id="btn-criar" onclick="criarLoja()" style="margin-top:1rem;">→ Criar Loja com IA</button>
+
+          <div class="prog-wrap" id="prog-wrap">
+            <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+            <div class="prog-label" id="prog-label">Iniciando...</div>
+            <div class="log-box" id="log-box"></div>
+          </div>
+
+          <div class="result" id="result">
+            <h3>✓ LOJA PROFISSIONAL CRIADA COM SUCESSO</h3>
+            <p id="result-text"></p>
+            <div style="display:flex;gap:8px;margin-top:.875rem;">
+              <button class="btn btn-sm btn-green" onclick="abrirPreview()">👁 Ver loja →</button>
+              <button class="btn btn-sm" onclick="checkAtual()">↻ Verificar vendas</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PAGE: FARM                             -->
+    <!-- ══════════════════════════════════════ -->
+    <div class="page" id="page-farm">
+      <!-- MOBILE STATS BAR -->
+      <div class="mobile-stats">
+        <div class="mobile-stat"><span class="mobile-stat-val" id="ms-total">0</span><span class="mobile-stat-lbl">Lojas</span></div>
+        <div class="mobile-stat"><span class="mobile-stat-val" style="color:#ff9800" id="ms-aquecendo">0</span><span class="mobile-stat-lbl">Aquecendo</span></div>
+        <div class="mobile-stat"><span class="mobile-stat-val" style="color:var(--gr)" id="ms-prontas">0</span><span class="mobile-stat-lbl">Prontas</span></div>
+        <div class="mobile-stat"><span class="mobile-stat-val" style="color:var(--ac)" id="ms-receita">$0</span><span class="mobile-stat-lbl">Receita</span></div>
+        <div class="mobile-stat"><span class="mobile-stat-val" style="color:var(--bl)" id="ms-pedidos">0</span><span class="mobile-stat-lbl">Pedidos</span></div>
+      </div>
+      <div class="ph">
+        <div class="ph-left">
+          <div class="ph-eye">Monitoramento</div>
+          <div class="ph-title">Monitor Farm</div>
+          <div class="ph-sub">Todas as lojas em tempo real</div>
+        </div>
+        <div class="ph-right">
+          <button class="btn btn-sm" onclick="checkAll()">↻ Atualizar tudo</button>
+
+        </div>
+      </div>
+      <div class="farm-grid" style="grid-template-columns:repeat(5,1fr);">
+        <div class="farm-stat-card"><span class="farm-stat-val" id="f-total">0</span><span class="farm-stat-lbl">Lojas</span></div>
+        <div class="farm-stat-card"><span class="farm-stat-val" style="color:#ff9800" id="f-aquecendo">0</span><span class="farm-stat-lbl">Aquecendo</span></div>
+        <div class="farm-stat-card"><span class="farm-stat-val" style="color:var(--gr)" id="f-prontas">0</span><span class="farm-stat-lbl">Prontas</span></div>
+        <div class="farm-stat-card"><span class="farm-stat-val" style="color:var(--ac)" id="f-receita">$0</span><span class="farm-stat-lbl">Receita Total</span></div>
+        <div class="farm-stat-card"><span class="farm-stat-val" style="color:var(--bl)" id="f-pedidos">0</span><span class="farm-stat-lbl">Pedidos</span></div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="farm-list"><div class="empty">nenhuma loja ainda</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PAGE: LOJAS                            -->
+    <!-- ══════════════════════════════════════ -->
+    <div class="page" id="page-lojas">
+      <div class="ph">
+        <div class="ph-left">
+          <div class="ph-eye">Gestão</div>
+          <div class="ph-title">Minhas Lojas</div>
+        </div>
+        <div class="ph-right">
+          <button class="btn btn-sm" onclick="checkAll()">↻ Verificar vendas</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="lojas-list"><div class="empty">nenhuma loja criada ainda</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PAGE: RANKING                          -->
+    <!-- ══════════════════════════════════════ -->
+    <div class="page" id="page-ranking">
+      <div class="ph">
+        <div class="ph-left">
+          <div class="ph-eye">Performance</div>
+          <div class="ph-title">Ranking</div>
+        </div>
+        <div class="ph-right">
+          <button class="btn btn-sm" onclick="checkAll();setTimeout(renderRanking,1500)">↻ Atualizar</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body" id="ranking-list"><div class="empty">nenhuma loja ainda</div></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PAGE: TOKEN                            -->
+    <!-- ══════════════════════════════════════ -->
+    <div class="page" id="page-token">
+      <div class="ph">
+        <div class="ph-left">
+          <div class="ph-eye">Autenticação</div>
+          <div class="ph-title">Gerar Token Shopify</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="info"><b>Como funciona:</b> Cole o Client ID e Secret do seu app Shopify → clique Autorizar → aprove na loja → token gerado automaticamente.</div>
+          <div class="tstep"><div class="tstep-num">1</div><div class="tstep-text">Acesse <a href="https://dev.shopify.com" target="_blank">dev.shopify.com</a> → clique no seu app</div></div>
+          <div class="tstep"><div class="tstep-num">2</div><div class="tstep-text">Clique em <b>Settings</b> → copie <b>Client ID</b> e <b>Secret</b></div></div>
+          <div class="divider"></div>
+          <div class="field"><div class="field-label">URL da loja</div><input id="tk-url" type="text" placeholder="minha-loja.myshopify.com"/></div>
+          <div class="field-grid">
+            <div class="field"><div class="field-label">Client ID</div><input id="tk-id" type="text" placeholder="ex: 8585d94..."/></div>
+            <div class="field"><div class="field-label">Client Secret</div><input id="tk-secret" type="password" placeholder="shpss_..."/></div>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="oauthStart()">→ Autorizar e Gerar Token</button>
+          <div id="tk-step2" style="display:none;margin-top:1.25rem;">
+            <div class="warn"><b>Passo 2:</b> Autorize o app na Shopify. Após redirecionar, copie só o código após <b>?code=</b> na URL.</div>
+            <div class="field"><div class="field-label">Código OAuth</div><input id="tk-code" type="text" placeholder="ex: a8a567276f5c23f9..."/></div>
+            <button class="btn btn-primary btn-full" onclick="oauthFinish()">→ Gerar Token Final</button>
+          </div>
+          <div id="tk-result" style="display:none;margin-top:1.25rem;background:rgba(76,175,80,.05);border:1px solid rgba(76,175,80,.15);border-radius:var(--r);padding:1.25rem;">
+            <div style="font-family:var(--mono);font-size:8px;color:var(--gr);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">✓ Token gerado!</div>
+            <div style="font-family:var(--mono);font-size:11px;background:var(--s2);padding:10px;border-radius:var(--r);word-break:break-all;margin-bottom:10px;" id="tk-val"></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('tk-val').textContent).then(()=>alert('Copiado!'))">Copiar</button>
+              <button class="btn btn-sm btn-primary" onclick="usarToken()">Usar na criação →</button>
+            </div>
+          </div>
+          <div id="tk-err" style="display:none;margin-top:1rem;color:var(--rd);font-size:12px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════ -->
+    <!-- PAGE: GUIA                             -->
+    <!-- ══════════════════════════════════════ -->
+    <div class="page" id="page-guia">
+      <div class="ph">
+        <div class="ph-left">
+          <div class="ph-eye">Documentação</div>
+          <div class="ph-title">Guia Rápido v10</div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="card-header"><span class="card-title">Fluxo completo</span></div>
+        <div class="card-body">
+          <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">1</div><div class="tstep-text"><b>Criar loja Shopify</b> — shopify.com → Start free trial → 3 dias grátis, depois $1/mês por 3 meses.</div></div>
+          <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">2</div><div class="tstep-text"><b>Instalar tema Dawn</b> — Admin → Online Store → Themes → Visit Theme Store → Dawn → Add → Publish.</div></div>
+          <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">3</div><div class="tstep-text"><b>Gerar token Shopify</b> — use a aba "Gerar Token" neste dashboard. Automático.</div></div>
+          <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">4</div><div class="tstep-text"><b>Obter Claude API Key</b> — console.anthropic.com → API Keys → Create Key. Recomendado fortemente.</div></div>
+          <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">5</div><div class="tstep-text"><b>Gerar imagens</b> — clique "Ver prompts" → copie → gere no Midjourney/DALL-E/Nano Banana → anexe.</div></div>
+          <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">6</div><div class="tstep-text"><b>Criar loja</b> — clique "Criar Loja com IA" → aguarde 3-5 minutos → loja pronta.</div></div>
+          <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">7</div><div class="tstep-text"><b>Pagamentos</b> — Admin → Settings → Payments → Shopify Payments ou Stripe.</div></div>
+          <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">8</div><div class="tstep-text"><b>Repetir para mais lojas</b> — Monitor Farm acompanha todas. KV sincroniza em todos os dispositivos.</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Custos estimados — 20 lojas</span></div>
+        <div class="card-body">
+          <table class="tbl">
+            <thead><tr><th>Item</th><th>Custo</th><th>Detalhe</th></tr></thead>
+            <tbody>
+              <tr><td style="color:var(--t2)">Claude API por loja</td><td style="font-family:var(--mono);font-size:11px;color:var(--ac)">~$0.30-0.80</td><td style="font-size:11px;color:var(--t3)">Marca + tema + blog</td></tr>
+              <tr><td style="color:var(--t2)">20 lojas Claude API</td><td style="font-family:var(--mono);font-size:11px;color:var(--ac)">~$6-16</td><td style="font-size:11px;color:var(--t3)">Total IA</td></tr>
+              <tr><td style="color:var(--t2)">Shopify (20 lojas)</td><td style="font-family:var(--mono);font-size:11px;color:var(--ac)">$20/mês</td><td style="font-size:11px;color:var(--t3)">$1/loja × 3 meses</td></tr>
+              <tr><td style="color:var(--t2)">Cloudflare Workers + KV</td><td style="font-family:var(--mono);font-size:11px;color:var(--gr)">Grátis</td><td style="font-size:11px;color:var(--t3)">100k req/dia</td></tr>
+              <tr><td style="color:var(--t2)">Imagens (Midjourney)</td><td style="font-family:var(--mono);font-size:11px;color:var(--ac)">$10/mês</td><td style="font-size:11px;color:var(--t3)">Plano básico</td></tr>
+              <tr><td style="color:var(--t2);font-weight:500">Total 20 lojas</td><td style="font-family:var(--mono);font-size:11px;color:var(--gr);font-weight:500">~$36-46</td><td style="font-size:11px;color:var(--t3)">~R$200/mês</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIGURAÇÃO
+// ══════════════════════════════════════════════════════
+const WORKER = 'https://shopify-proxy.lfermau-01.workers.dev';
+const TOKEN_WORKER = 'https://shopify-token.lfermau-01.workers.dev';
+const CLAUDE_MODEL = 'claude-sonnet-4-20250514';
+
+let nicho = 'jewelry';
+let qty = 3;
+let lojas = [];
+let rodando = false;
+let previewUrl = '';
+let imgs = { logo: null, bannerD: null, bannerM: null, produtos: {} };
+let lojaIdx = -1;
+
+// ══════════════════════════════════════════════════════
+// DADOS DOS NICHOS
+// ══════════════════════════════════════════════════════
+const NICHOS = {
+  jewelry: {
+    label: 'Bijuterias', icon: '💎',
+    refs: ['Mejuri', 'Pura Vida Bracelets', 'Delani Jewelry', 'Missoma', 'Gorjana'],
+    cores: { bg: '#ffffff', texto: '#1a1a1a', accent: '#C9A84C', secondary: '#0d0d0d' },
+    fonte: 'Georgia, serif',
+    hero_titulo: 'Timeless Elegance', hero_sub: 'Premium handcrafted jewelry for the modern woman',
+    announcement: 'Free Worldwide Shipping · New Collection Just Dropped',
+    collections: ['Best Sellers','New Arrivals','Rings','Necklaces','Earrings'],
+    benefits: [
+      {icon:'✦',title:'Free Worldwide Shipping',sub:'On all orders, always'},
+      {icon:'◈',title:'30-Day Easy Returns',sub:'Hassle-free policy'},
+      {icon:'◇',title:'Premium Quality',sub:'Crafted to last a lifetime'},
+      {icon:'◉',title:'Secure Checkout',sub:'SSL encrypted & safe'}
+    ],
+    products: [
+      {title:'Aurora Gold Ring',type:'Rings',price:'49.99',compare:'89.99',desc:'A delicate gold ring with a minimalist crescent design. Perfect for stacking or wearing alone. Made from 18k gold-plated brass, tarnish-resistant.'},
+      {title:'Celestial Pendant Necklace',type:'Necklaces',price:'59.99',compare:'99.99',desc:'A dainty chain necklace with a star-shaped pendant. Catches light beautifully at any angle. Adjustable 16-18 inch chain.'},
+      {title:'Moonlight Drop Earrings',type:'Earrings',price:'39.99',compare:'69.99',desc:'Elegant teardrop earrings with a subtle gold finish. Lightweight and comfortable for all-day wear with any outfit.'},
+      {title:'Infinity Twist Bracelet',type:'Bracelets',price:'44.99',compare:'79.99',desc:'A timeless infinity bracelet with a gentle twist design. Adjustable fit, premium tarnish-resistant finish.'},
+      {title:'Rose Gold Band Ring',type:'Rings',price:'54.99',compare:'94.99',desc:'A sleek rose gold band ring with a polished mirror finish. Minimalist and versatile — from office to evening.'},
+      {title:'Pearl Cluster Earrings',type:'Earrings',price:'34.99',compare:'59.99',desc:'Freshwater pearl cluster earrings with a modern gold setting. Effortlessly elegant, day to night.'},
+      {title:'Dainty Chain Necklace',type:'Necklaces',price:'29.99',compare:'54.99',desc:'A whisper-thin chain necklace perfect for layering. Available in gold and silver. 18 inch with 2 inch extender.'},
+      {title:'Stacking Ring Set',type:'Rings',price:'64.99',compare:'109.99',desc:'Set of 3 stackable rings in mixed finishes — gold, rose gold, and silver. Mix and match for your perfect stack.'},
+      {title:'Crystal Tennis Bracelet',type:'Bracelets',price:'79.99',compare:'129.99',desc:'A stunning tennis bracelet with sparkling cubic zirconia stones. The ultimate everyday luxury statement.'},
+      {title:'Geo Diamond Studs',type:'Earrings',price:'44.99',compare:'74.99',desc:'Geometric diamond-cut stud earrings with a modern angular design. Push-back closure for secure, all-day wear.'}
+    ],
+    accessories: [
+      {title:'Jewelry Cleaning Cloth',type:'Care',price:'1.99',compare:'4.99',desc:'Professional microfiber polishing cloth for all metal jewelry. Removes tarnish and restores brilliant shine instantly.'},
+      {title:'Velvet Jewelry Pouch',type:'Storage',price:'2.99',compare:'5.99',desc:'Soft velvet drawstring pouch for storing and gifting jewelry. Available in black and ivory.'},
+      {title:'Ring Size Adjuster Set',type:'Accessories',price:'1.49',compare:'3.99',desc:'Set of 6 invisible ring size reducers. Makes any ring fit perfectly — no resizing needed.'},
+      {title:'Necklace Extender Chain',type:'Accessories',price:'1.99',compare:'4.99',desc:'Gold-plated chain extender to add 2-4 inches to any necklace. Universal lobster clasp.'},
+      {title:'Earring Back Replacements',type:'Accessories',price:'0.99',compare:'2.99',desc:'Set of 20 secure silicone earring backs. Universal fit for all post earrings.'}
+    ],
+    prompts: {
+      logo: 'Elegant luxury jewelry brand wordmark logo, serif font only no icons, gold color #C9A84C, pure white background, horizontal layout, minimalist luxury, transparent background PNG 400x100px high resolution',
+      bannerD: 'Luxury jewelry store hero banner 1440x600px, moody dark background #0d0d0d, dramatic studio lighting, delicate gold jewelry pieces arranged artfully on right side, golden particles floating, left side empty for text overlay, no text, ultra high quality commercial photography',
+      bannerM: 'Luxury jewelry store mobile banner 768x900px, dark elegant #0d0d0d background, gold jewelry centerpiece, dramatic top lighting, top 40% empty for text, no text, ultra high quality',
+      products: ['Delicate gold crescent ring product photo, pure white background, soft studio lighting from above, centered, no hands no people, luxury jewelry e-commerce, square 1:1','Thin gold chain necklace with star pendant product photo, pure white background, hanging or flat lay, soft lighting, no hands, luxury e-commerce, square 1:1','Gold teardrop earrings pair product photo, white background, symmetric arrangement, soft diffused lighting, no hands, luxury jewelry, square 1:1','Gold infinity bracelet product photo, white background, slightly angled, soft shadow, studio lighting, no hands, luxury, square 1:1','Rose gold band ring product photo, white background, tilted 45 degrees, minimal shadow, soft lighting, no hands, luxury, square 1:1','Pearl cluster earrings pair product photo, white background, close up detail, soft diffused lighting, no hands, luxury jewelry, square 1:1','Delicate gold chain necklace product photo, white background, coiled elegantly, studio lighting, no hands, luxury, square 1:1','3 stacking rings gold rose silver product photo, white background, arranged together, soft lighting, no hands, luxury jewelry, square 1:1','Crystal tennis bracelet product photo, white background, slightly curved, soft sparkle, studio lighting, no hands, luxury, square 1:1','Geometric diamond stud earrings pair product photo, white background, close up, sharp detail, soft lighting, no hands, luxury, square 1:1']
+    }
+  },
+
+  'mens-slim': {
+    label: 'Masc. Slim', icon: '👔',
+    refs: ['Bonobos', 'Taylor Stitch', 'Aimé Leon Dore', 'Todd Snyder', 'Buck Mason'],
+    cores: { bg: '#ffffff', texto: '#0d0d0d', accent: '#0d0d0d', secondary: '#1a1a1a' },
+    fonte: "'Helvetica Neue', Arial, sans-serif",
+    hero_titulo: 'Perfect Fit. Every Time.', hero_sub: 'Precision-cut menswear engineered for the modern man',
+    announcement: 'Free Returns · Premium Slim Fit · New Arrivals Weekly',
+    collections: ['Best Sellers','New Arrivals','Tops','Bottoms','Sets'],
+    benefits: [
+      {icon:'◈',title:'Slim Fit Precision',sub:'Tailored for your build'},
+      {icon:'◇',title:'Premium Fabrics',sub:'Quality you can feel'},
+      {icon:'✦',title:'Free Returns',sub:'Easy 30-day policy'},
+      {icon:'◉',title:'Fast Shipping',sub:'Delivered to your door'}
+    ],
+    products: [
+      {title:'Slim Tapered Chinos',type:'Bottoms',price:'69.99',compare:'119.99',desc:'A slim tapered chino with a clean break at the ankle. Mid-rise waist, stretch fabric for all-day comfort. Available in 5 colorways.'},
+      {title:'Essential Slim Tee',type:'Tops',price:'34.99',compare:'59.99',desc:'A perfectly cut crew-neck tee in premium pima cotton. Slim fit that skims without clinging. The foundation of any wardrobe.'},
+      {title:'Slim Fit Oxford Shirt',type:'Tops',price:'79.99',compare:'129.99',desc:'A classic Oxford re-engineered for a modern slim fit. Breathable 100% cotton, wrinkle-resistant finish for busy days.'},
+      {title:'Tapered Jogger Pants',type:'Bottoms',price:'64.99',compare:'109.99',desc:'A premium jogger with a slim tapered leg. Midweight French terry, side and back pockets, elasticated cuff.'},
+      {title:'Slim Fit Polo Shirt',type:'Tops',price:'59.99',compare:'99.99',desc:'A refined polo with a slim, tailored fit. Pique cotton, rib collar, three-button placket. Smart-casual perfected.'},
+      {title:'Skinny Fit Jeans',type:'Bottoms',price:'89.99',compare:'149.99',desc:'A slim-to-skinny jean in 4-way stretch denim. Mid-rise, tapered leg, five-pocket styling. Moves with you all day.'},
+      {title:'Slim Crew Neck Sweatshirt',type:'Tops',price:'74.99',compare:'124.99',desc:'A clean crew-neck in heavyweight French terry. Slim fit, ribbed cuffs and hem, minimal design done right.'},
+      {title:'Slim Track Pants',type:'Bottoms',price:'69.99',compare:'114.99',desc:'A technical track pant with slim athletic silhouette. Moisture-wicking fabric, zip pockets, drawstring waist.'},
+      {title:'Essential Slim Hoodie',type:'Tops',price:'84.99',compare:'139.99',desc:'A premium pullover hoodie with a clean, slim fit. Heavyweight French terry, kangaroo pocket, no excess bulk.'},
+      {title:'Slim Fit Chino Shorts',type:'Bottoms',price:'54.99',compare:'89.99',desc:'Slim chino shorts with a 7-inch inseam and clean finish. Stretch fabric, two hip pockets, back pocket.'}
+    ],
+    accessories: [
+      {title:'Slim Leather Belt',type:'Accessories',price:'2.99',compare:'5.99',desc:'Slim genuine leather belt with brushed metal buckle. Fits waist 28-42 inches.'},
+      {title:'No-Show Ankle Socks 3-Pack',type:'Accessories',price:'1.99',compare:'4.99',desc:'Premium no-show socks that stay hidden. Anti-slip heel grip, moisture-wicking cotton.'},
+      {title:'Fabric Clothing Shaver',type:'Accessories',price:'2.49',compare:'5.99',desc:'Compact electric fabric shaver removes pilling instantly. Keeps clothes looking new.'},
+      {title:'Garment Deodorizer Spray',type:'Accessories',price:'1.49',compare:'3.99',desc:'Fresh-scent fabric spray neutralizes odors between washes. Safe for all fabrics.'},
+      {title:'Trouser Hanger Set 5-Pack',type:'Accessories',price:'0.99',compare:'2.99',desc:'Non-slip velvet trouser hangers keep slim pants crease-free.'}
+    ],
+    prompts: {
+      logo: 'Minimal bold wordmark logo premium mens clothing brand, clean strong sans-serif font, black #0d0d0d, pure white background, no icons no marks, horizontal layout, modern sophisticated, PNG 400x100px',
+      bannerD: 'Premium mens slim clothing store hero banner 1440x600px, clean white or light grey background, male model wearing perfectly fitted slim chinos and Oxford shirt, confident natural pose, soft natural studio lighting, fashion editorial, left side empty for text, no text, high quality',
+      bannerM: 'Mens slim clothing store mobile banner 768x900px, clean light background, slim male model in tailored clothing, top 40% empty for text, fashion editorial photography, no text',
+      products: Array(10).fill('').map((_, i) => ['Mens slim tapered chino pants flat lay white background studio lighting no people square 1:1','Mens slim crew neck cotton tee flat lay white background studio lighting no people square 1:1','Mens slim Oxford shirt flat lay or hanging white background studio lighting no people square 1:1','Mens tapered jogger pants flat lay white background studio lighting no people square 1:1','Mens slim polo shirt flat lay white background studio lighting no people square 1:1','Mens skinny jeans dark wash flat lay white background studio lighting no people square 1:1','Mens crew neck sweatshirt flat lay white background studio lighting no people square 1:1','Mens slim track pants flat lay white background studio lighting no people square 1:1','Mens slim pullover hoodie flat lay white background studio lighting no people square 1:1','Mens slim chino shorts flat lay white background studio lighting no people square 1:1'][i])
+    }
+  },
+
+  'womens-slim': {
+    label: 'Fem. Slim', icon: '👗',
+    refs: ['Good American', 'Princess Polly', 'Fashion Nova', 'Revolve', 'ASOS'],
+    cores: { bg: '#ffffff', texto: '#1a1a1a', accent: '#8B4B62', secondary: '#1a1a1a' },
+    fonte: 'Georgia, serif',
+    hero_titulo: 'Dress Your Best Self', hero_sub: 'Flattering slim-fit styles made for real women',
+    announcement: 'Free Returns Always · New Styles Weekly · Ships in 24h',
+    collections: ['Best Sellers','New Arrivals','Dresses','Sets','Tops'],
+    benefits: [
+      {icon:'✦',title:'Perfect Fit Guarantee',sub:'Free exchanges on size'},
+      {icon:'◈',title:'New Styles Weekly',sub:'Always on trend'},
+      {icon:'◇',title:'Free Returns',sub:'30-day easy returns'},
+      {icon:'◉',title:'Fast Delivery',sub:'Ships within 24 hours'}
+    ],
+    products: [
+      {title:'Sculpt Midi Dress',type:'Dresses',price:'59.99',compare:'99.99',desc:'A body-sculpting midi dress with ruched side detailing. Stretchy fabric holds you in while keeping you comfortable all day.'},
+      {title:'Slim Fit Blazer Set',type:'Sets',price:'89.99',compare:'149.99',desc:'A coordinated blazer and trouser set with tailored slim silhouette. Power dressing made effortlessly easy.'},
+      {title:'Ribbed Bodycon Dress',type:'Dresses',price:'49.99',compare:'84.99',desc:'A classic ribbed bodycon dress that flatters every curve. Available in 8 colors for every occasion.'},
+      {title:'High-Waist Slim Leggings',type:'Bottoms',price:'44.99',compare:'74.99',desc:'Premium high-waist leggings with buttery-soft fabric. Four-way stretch, squat-proof, slimming fit.'},
+      {title:'Slim Wrap Blouse',type:'Tops',price:'39.99',compare:'69.99',desc:'A feminine wrap blouse that ties at the waist for a flattering adjustable fit. Flowy satin fabric.'},
+      {title:'Fitted Crop Jacket',type:'Outerwear',price:'79.99',compare:'129.99',desc:'A cropped jacket with structured shoulders and fitted silhouette. Pairs perfectly with high-waist bottoms.'},
+      {title:'Slim Straight Jeans',type:'Bottoms',price:'69.99',compare:'114.99',desc:'A slim straight jean with high rise and clean finish. Premium stretch denim for all-day comfort.'},
+      {title:'Bodysuit + Trouser Set',type:'Sets',price:'74.99',compare:'124.99',desc:'A coordinated bodysuit and slim trouser set for effortless styling. Snap closure on the bodysuit.'},
+      {title:'Off-Shoulder Mini Dress',type:'Dresses',price:'54.99',compare:'89.99',desc:'A flirty off-shoulder mini with slim fit bodice and flared hem. Perfect for evenings out.'},
+      {title:'Seamless Slim Turtleneck',type:'Tops',price:'34.99',compare:'59.99',desc:'A seamless turtleneck with zero bulk. Soft second-skin fabric that layers beautifully.'}
+    ],
+    accessories: [
+      {title:'Fashion Double-Sided Tape',type:'Accessories',price:'1.49',compare:'3.99',desc:'Skin-safe fashion tape. Keeps necklines, hems and straps in place all day.'},
+      {title:'Invisible Bra Straps Clear',type:'Accessories',price:'1.99',compare:'4.99',desc:'Transparent bra straps. Universal fit, non-slip, completely invisible.'},
+      {title:'Scrunchie Set 5-Pack',type:'Accessories',price:'2.49',compare:'5.99',desc:'Soft satin scrunchies in 5 complementary colors. Gentle on hair.'},
+      {title:'Clothing Lint Roller',type:'Accessories',price:'0.99',compare:'2.49',desc:'Compact lint roller removes fluff and lint instantly. 60 tear-off sheets.'},
+      {title:'Silicone Bra Inserts Pair',type:'Accessories',price:'2.99',compare:'5.99',desc:'Soft silicone push-up inserts for extra lift. Reusable and washable.'}
+    ],
+    prompts: {
+      logo: 'Elegant feminine wordmark logo womens clothing brand, thin serif font, dark rose #8B4B62, pure white background, no icons, horizontal minimalist luxury fashion, PNG 400x100px',
+      bannerD: 'Womens slim clothing store hero banner 1440x600px, clean cream or white background, female model wearing flattering slim dress, confident elegant pose, soft natural studio lighting, fashion editorial, left space for text, no text, high quality',
+      bannerM: 'Womens fashion store mobile banner 768x900px, soft cream background, female model slim fitted outfit, top 40% empty for text, editorial fashion photography elegant feminine, no text',
+      products: Array(10).fill('').map((_, i) => ['Womens sculpt midi dress flat lay white background studio lighting no people square 1:1','Womens slim blazer set jacket trousers flat lay arranged white background studio no people square 1:1','Womens ribbed bodycon dress flat lay white background studio lighting no people square 1:1','Womens high waist leggings flat lay white background studio lighting no people square 1:1','Womens wrap blouse satin flat lay white background studio lighting no people square 1:1','Womens fitted crop jacket flat lay white background studio lighting no people square 1:1','Womens slim straight jeans flat lay white background studio lighting no people square 1:1','Womens bodysuit trouser matching set flat lay white background studio no people square 1:1','Womens off shoulder mini dress flat lay white background studio no people square 1:1','Womens seamless turtleneck top flat lay white background studio lighting no people square 1:1'][i])
+    }
+  },
+
+  sneakers: {
+    label: 'Tênis Sport', icon: '👟',
+    refs: ['NOBULL', 'Thursday Boot Co.', 'Beckett Simonon', 'Oliver Cabell', 'Atoms'],
+    cores: { bg: '#ffffff', texto: '#111', accent: '#FF5722', secondary: '#111' },
+    fonte: "'Helvetica Neue', Arial, sans-serif",
+    hero_titulo: 'Train Harder. Look Better.', hero_sub: 'Performance athletic footwear built for the relentless',
+    announcement: 'Free Shipping · 30-Day Comfort Guarantee · New Drops',
+    collections: ['Best Sellers','New Arrivals','Running','Training','Casual'],
+    benefits: [
+      {icon:'◉',title:'Max Comfort',sub:'Engineered insoles'},
+      {icon:'◈',title:'Built to Last',sub:'Premium materials only'},
+      {icon:'✦',title:'30-Day Guarantee',sub:'Love them or return'},
+      {icon:'◇',title:'Free Shipping',sub:'On all orders'}
+    ],
+    products: [
+      {title:'All-Day Runner Pro',type:'Running',price:'89.99',compare:'149.99',desc:'High-performance running shoe with responsive foam cushioning and breathable mesh upper. Built for distance, designed for style.'},
+      {title:'Cross-Training Athletic',type:'Training',price:'79.99',compare:'129.99',desc:'Versatile cross-training shoe with lateral support and durable rubber outsole. From gym floor to pavement.'},
+      {title:'Urban Casual Sneaker',type:'Casual',price:'69.99',compare:'114.99',desc:'Clean minimal sneaker for everyday wear. Premium leather-look upper, memory foam insole, all-day comfort.'},
+      {title:'Trail Grip Trainer',type:'Running',price:'94.99',compare:'159.99',desc:'Aggressive trail runner with multi-directional lugs and waterproof upper. Conquer any terrain, any weather.'},
+      {title:'Lightweight Speed Shoe',type:'Running',price:'84.99',compare:'139.99',desc:'Ultralight racing shoe at just 6.8 oz. Carbon-infused plate for explosive energy return. For serious runners.'},
+      {title:'Gym Performance Trainer',type:'Training',price:'74.99',compare:'124.99',desc:'Stable flat training shoe for lifting and gym work. Wide toe box, firm heel cup, built for the long haul.'},
+      {title:'Slip-On Sport Mule',type:'Casual',price:'59.99',compare:'99.99',desc:'Sporty slip-on mule for easy on-and-off. Cushioned footbed, flexible outsole, breathable upper. Recovery ready.'},
+      {title:'High-Top Streetwear',type:'Casual',price:'84.99',compare:'139.99',desc:'Bold high-top with ankle support and clean streetwear aesthetic. Available in 6 colorways. Make a statement.'},
+      {title:'Recovery Slide Sandal',type:'Recovery',price:'49.99',compare:'84.99',desc:'Post-workout recovery slide with orthopedic arch support and cushioned foam. Essential for active recovery.'},
+      {title:'Zero Drop Barefoot Runner',type:'Running',price:'79.99',compare:'129.99',desc:'Minimalist zero-drop shoe for natural running form. Wide toe box, flexible sole, proprioceptive connection.'}
+    ],
+    accessories: [
+      {title:'Premium Lace Set 2-Pairs',type:'Accessories',price:'1.99',compare:'4.99',desc:'Flat waxed laces in black and white. Fits most athletic sneakers, 45-55 inch length.'},
+      {title:'Heel Grip Pads 4-Pack',type:'Accessories',price:'1.49',compare:'3.99',desc:'Self-adhesive heel grips prevent blisters and slipping. Clear, ultra-thin, discreet.'},
+      {title:'Sneaker Cleaning Kit',type:'Accessories',price:'2.99',compare:'5.99',desc:'Compact kit with brush and foam cleaner for all shoe materials. Restores like new.'},
+      {title:'Arch Support Insoles',type:'Accessories',price:'2.49',compare:'5.99',desc:'Slim arch support insoles for extra cushioning. Fits any athletic shoe, trimable to size.'},
+      {title:'Shoe Deodorizer Balls',type:'Accessories',price:'0.99',compare:'2.49',desc:'Natural bamboo charcoal deodorizer balls. Neutralize odor in 24h, reusable 2 years.'}
+    ],
+    prompts: {
+      logo: 'Bold minimal wordmark logo athletic footwear brand, strong clean sans-serif font, black #111 with orange accent #FF5722, pure white background, no icons, horizontal, sporty performance, PNG 400x100px',
+      bannerD: 'Athletic sneaker store hero banner 1440x600px, dark dramatic #111 background, athletic sneakers dramatically lit side angle, orange accent lighting #FF5722, motion energy feel, left space for text overlay, no text, professional product photography',
+      bannerM: 'Athletic sneaker store mobile banner 768x900px, dark #111 background, sneakers center dramatic lighting, orange accents, top 40% empty for text, energy performance feel, no text',
+      products: Array(10).fill('').map((_, i) => ['Athletic running shoe side profile white background studio lighting no people square 1:1','Cross training athletic shoe three-quarter angle white background studio no people square 1:1','Casual urban white sneaker side view white background studio lighting no people square 1:1','Trail running shoe aggressive outsole bottom angle white background studio no people square 1:1','Lightweight racing shoe side profile white background studio lighting no people square 1:1','Flat gym training shoe side view white background studio no people square 1:1','Sporty slip-on mule shoe top-down view white background studio no people square 1:1','High top streetwear sneaker side profile white background studio lighting no people square 1:1','Recovery slide sandal top-down view white background studio no people square 1:1','Minimalist barefoot running shoe side view thin sole white background studio no people square 1:1'][i])
+    }
+  }
+};
+
+// ══════════════════════════════════════════════════════
+// APIS
+// ══════════════════════════════════════════════════════
+async function shopifyAPI(url, token, method, ep, body = null) {
+  const r = await fetch(WORKER, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ store_url: url, token, method, endpoint: ep, body })
+  });
+  if (!r.ok) throw new Error(`API error ${r.status}: ${await r.text()}`);
+  return r.json();
+}
+
+async function claudeAPI(prompt, key, maxTokens = 4000) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: CLAUDE_MODEL,
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error?.message || 'Claude API error'); }
+  const d = await r.json();
+  return d.content[0].text;
+}
+
+// ══════════════════════════════════════════════════════
+// KV SYNC — CLOUDFLARE
+// ══════════════════════════════════════════════════════
+async function kvSalvar(loja) {
+  try {
+    await fetch(WORKER, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'salvar_loja', loja })
+    });
+  } catch(e) {}
+}
+
+async function kvListar() {
+  try {
+    const r = await fetch(WORKER, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'listar_lojas' })
+    });
+    if (!r.ok) return [];
+    const d = await r.json();
+    const lojas = d.lojas || [];
+    // Garantir que cada loja tem os campos necessários
+    return lojas.filter(l => l && l.url);
+  } catch(e) {
+    console.error('KV listar erro:', e);
+    return [];
+  }
+}
+
+async function kvAtualizar(url, vendas, receita, checkedAt) {
+  try {
+    await fetch(WORKER, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'atualizar_vendas', url, vendas, receita, checkedAt })
+    });
+  } catch(e) {}
+}
+
+async function kvLimpar() {
+  try {
+    await fetch(WORKER, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'limpar_lojas' })
+    });
+  } catch(e) {}
+}
+
+async function syncKV() {
+  setSyncStatus('Sincronizando com KV...', false);
+  try {
+    const kvLojas = await kvListar();
+    const localLojas = JSON.parse(localStorage.getItem('dg_v10') || '[]');
+
+    if (kvLojas.length > 0 && localLojas.length === 0) {
+      // Novo navegador/dispositivo — carrega tudo do KV
+      lojas = kvLojas;
+      localStorage.setItem('dg_v10', JSON.stringify(lojas));
+      setSyncStatus('KV carregado · ' + lojas.length + ' loja(s)', true);
+
+    } else if (kvLojas.length === 0 && localLojas.length > 0) {
+      // KV vazio mas tem dados locais — sobe para o KV
+      lojas = localLojas;
+      for (const l of lojas) await kvSalvar(l);
+      setSyncStatus('Sincronizado ' + lojas.length + ' loja(s)', true);
+
+    } else if (kvLojas.length > 0 && localLojas.length > 0) {
+      // Ambos têm dados — merge por URL sem duplicar
+      const merged = [...kvLojas];
+      for (const local of localLojas) {
+        if (!merged.find(k => k.url === local.url)) {
+          merged.push(local);
+          await kvSalvar(local);
+        }
+      }
+      lojas = merged;
+      localStorage.setItem('dg_v10', JSON.stringify(lojas));
+      setSyncStatus('Sincronizado · ' + lojas.length + ' loja(s)', true);
+
+    } else {
+      lojas = [];
+      setSyncStatus('Pronto · nenhuma loja ainda', true);
+    }
+  } catch(e) {
+    // Fallback para localStorage se KV falhar
+    lojas = JSON.parse(localStorage.getItem('dg_v10') || '[]');
+    setSyncStatus('Offline · dados locais (' + lojas.length + ')', false);
+  }
+  renderAll();
+}
+
+function setSyncStatus(label, ok) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if (dot) dot.style.background = ok ? 'var(--gr)' : 'var(--ac)';
+  if (lbl) lbl.textContent = label;
+}
+
+// ══════════════════════════════════════════════════════
+// FILE HELPERS
+// ══════════════════════════════════════════════════════
+function fileToB64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  el.classList.add('active');
+  if (id === 'farm') renderFarm();
+  if (id === 'lojas') renderLojas();
+  if (id === 'ranking') renderRanking();
+}
+
+function setT(i, s) {
+  const el = document.getElementById('t' + i);
+  if (!el) return;
+  el.className = 'task ' + s;
+  const dot = el.querySelector('.task-dot');
+  if (dot) dot.textContent = s === 'done' ? '✓' : s === 'running' ? '►' : s === 'error' ? '✕' : '○';
+}
+function resetT() { for (let i = 0; i < 15; i++) setT(i, ''); }
+
+function log(msg, type = '') {
+  const box = document.getElementById('log-box');
+  if (!box) return;
+  const ts = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const d = document.createElement('div');
+  d.className = 'log-line ' + type;
+  d.innerHTML = `<span class="ts">${ts}</span><span class="msg">${msg}</span>`;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setP(pct, label) {
+  const f = document.getElementById('prog-fill');
+  const l = document.getElementById('prog-label');
+  if (f) f.style.width = pct + '%';
+  if (l) l.textContent = label;
+}
+
+function valUrl(inp) {
+  inp.classList.toggle('valid', inp.value.includes('.myshopify.com'));
+}
+
+function selNicho(el) {
+  document.querySelectorAll('.nicho-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  nicho = el.dataset.nicho;
+  renderProdutos();
+}
+
+function selQty(el) {
+  document.querySelectorAll('.qty-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  qty = parseInt(el.dataset.qty);
+  const badge = document.getElementById('qty-total-badge');
+  if (badge) badge.textContent = `${qty} produtos + 5 acessórios = ${qty + 5} total`;
+  renderProdutos();
+}
+
+function handleUpload(input, zoneId, key) {
+  const file = input.files[0];
+  if (!file) return;
+  imgs[key] = file;
+  const zone = document.getElementById(zoneId);
+  if (zone) zone.classList.add('filled');
+  const prevId = 'prev-' + zoneId.replace('uz-', '');
+  const prev = document.getElementById(prevId);
+  if (prev) { prev.src = URL.createObjectURL(file); }
+}
+
+function handleProdUpload(input, idx) {
+  const file = input.files[0];
+  if (!file) return;
+  imgs.produtos[idx] = file;
+  const thumb = document.getElementById('pt-' + idx);
+  if (thumb) {
+    thumb.classList.add('filled');
+    const img = thumb.querySelector('img');
+    if (img) img.src = URL.createObjectURL(file);
+  }
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+function abrirPreview() {
+  if (previewUrl) window.open(previewUrl, '_blank');
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER PRODUTOS
+// ══════════════════════════════════════════════════════
+function renderProdutos() {
+  const n = NICHOS[nicho];
+  if (!n) return;
+  const container = document.getElementById('prod-list');
+  if (!container) return;
+  imgs.produtos = {};
+  const all = [...n.products.slice(0, qty), ...n.accessories];
+  container.innerHTML = all.map((p, i) => {
+    const isAcc = parseFloat(p.price) < 5;
+    return `<div class="prod-item">
+      <div class="prod-num">${String(i + 1).padStart(2, '0')}</div>
+      <div class="prod-info">
+        <div class="prod-title">${p.title}</div>
+        <div class="prod-meta">
+          <span class="prod-price">$${p.price}</span>
+          ${p.compare ? `<span class="prod-compare">$${p.compare}</span>` : ''}
+          <span class="prod-type">${p.type}</span>
+          ${isAcc ? '<span class="prod-tag prod-tag-acc">Acessório $1-3</span>' : ''}
+        </div>
+      </div>
+      <div class="prod-thumb ${imgs.produtos[i] ? 'filled' : ''}" id="pt-${i}" onclick="document.getElementById('pf-${i}').click()">
+        <input type="file" id="pf-${i}" accept="image/*" onchange="handleProdUpload(this,${i})" style="position:absolute;inset:0;opacity:0;cursor:pointer;"/>
+        <img src="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px;"/>
+        <span class="prod-thumb-plus">+</span>
+        <span class="prod-thumb-label">foto</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// PROMPTS
+// ══════════════════════════════════════════════════════
+function abrirPrompts() {
+  const n = NICHOS[nicho];
+  if (!n) return;
+  const body = document.getElementById('modal-prompts-body');
+  body.innerHTML = `
+    <div style="margin-bottom:1.25rem;">
+      <div class="prompt-label">Logo · PNG transparente 400×100px</div>
+      <div class="prompt-box">${n.prompts.logo}<button class="btn btn-sm prompt-copy-btn" onclick="copyPrompt(this)">Copiar</button></div>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <div class="prompt-label">Banner Desktop · 1440×600px</div>
+      <div class="prompt-box">${n.prompts.bannerD}<button class="btn btn-sm prompt-copy-btn" onclick="copyPrompt(this)">Copiar</button></div>
+    </div>
+    <div>
+      <div class="prompt-label">Banner Mobile · 768×900px</div>
+      <div class="prompt-box">${n.prompts.bannerM}<button class="btn btn-sm prompt-copy-btn" onclick="copyPrompt(this)">Copiar</button></div>
+    </div>`;
+  document.getElementById('modal-prompts').classList.add('show');
+}
+
+function abrirPromptsProdutos() {
+  const n = NICHOS[nicho];
+  if (!n) return;
+  const all = [...n.products.slice(0, qty), ...n.accessories];
+  const body = document.getElementById('modal-prompts-body');
+  body.innerHTML = all.map((p, i) => `
+    <div style="margin-bottom:1rem;">
+      <div class="prompt-label">${String(i + 1).padStart(2, '0')} — ${p.title} · $${p.price}</div>
+      <div class="prompt-box">${n.prompts.products[Math.min(i, n.prompts.products.length - 1)] || 'Product photo white background studio lighting square 1:1'}<button class="btn btn-sm prompt-copy-btn" onclick="copyPrompt(this)">Copiar</button></div>
+    </div>`).join('');
+  document.getElementById('modal-prompts').classList.add('show');
+}
+
+function copyPrompt(btn) {
+  const text = btn.parentElement.textContent.replace('Copiar', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copiado!';
+    setTimeout(() => btn.textContent = 'Copiar', 2000);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// CRIAR LOJA — PRINCIPAL
+// ══════════════════════════════════════════════════════
+async function criarLoja() {
+  if (rodando) return;
+  const url = document.getElementById('c-url').value.trim().replace(/\/$/, '');
+  const token = document.getElementById('c-token').value.trim();
+  const claudeKey = document.getElementById('c-claude').value.trim();
+  if (!url || !token) { alert('Preencha a URL da loja e o token Shopify.'); return; }
+
+  rodando = true;
+  resetT();
+  const btn = document.getElementById('btn-criar');
+  btn.disabled = true; btn.textContent = '⏳ Criando loja com IA...';
+  document.getElementById('prog-wrap').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+  previewUrl = 'https://' + url;
+
+  // Salvar keys
+  localStorage.setItem('dg_url', url);
+  localStorage.setItem('dg_token', token);
+  if (claudeKey) localStorage.setItem('dg_claude', claudeKey);
+
+  const n = NICHOS[nicho];
+  const allProds = [...n.products.slice(0, qty), ...n.accessories];
+
+  let marca = { nome: n.label + ' Store', slogan: n.hero_sub, hero_titulo: n.hero_titulo, hero_sub: n.hero_sub, descricao: '', produtos: allProds.map(p => ({ ...p })) };
+
+  const loja = {
+    url, nicho, nicho_label: n.label,
+    data: new Date().toLocaleDateString('pt-BR'),
+    hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    status: 'criando', shopifyToken: token, vendas: 0, receita: '0.00', marca: ''
+  };
+  lojas.unshift(loja);
+  lojaIdx = 0;
+  localStorage.setItem('dg_v10', JSON.stringify(lojas));
+
+  try {
+
+    // ─── T0: LIMPAR LOJA ───────────────────────────
+    setT(0, 'running');
+    setP(3, 'Limpando loja...');
+    log('Limpando loja completamente...', 'info');
+    try {
+      // Produtos
+      const prods = await shopifyAPI(url, token, 'GET', '/products.json?limit=250');
+      for (const p of (prods.products || [])) {
+        try { await shopifyAPI(url, token, 'DELETE', `/products/${p.id}.json`); } catch(e) {}
+      }
+      // Coleções
+      const cols = await shopifyAPI(url, token, 'GET', '/custom_collections.json?limit=250');
+      for (const c of (cols.custom_collections || [])) {
+        try { await shopifyAPI(url, token, 'DELETE', `/custom_collections/${c.id}.json`); } catch(e) {}
+      }
+      // Páginas
+      const pages = await shopifyAPI(url, token, 'GET', '/pages.json?limit=250');
+      for (const p of (pages.pages || [])) {
+        try { await shopifyAPI(url, token, 'DELETE', `/pages/${p.id}.json`); } catch(e) {}
+      }
+      // Artigos do blog
+      const blogs = await shopifyAPI(url, token, 'GET', '/blogs.json');
+      for (const b of (blogs.blogs || [])) {
+        const arts = await shopifyAPI(url, token, 'GET', `/blogs/${b.id}/articles.json?limit=250`);
+        for (const a of (arts.articles || [])) {
+          try { await shopifyAPI(url, token, 'DELETE', `/blogs/${b.id}/articles/${a.id}.json`); } catch(e) {}
+        }
+      }
+      log('Loja limpa — produtos, coleções, páginas, artigos removidos', 'ok');
+    } catch(e) { log('Limpeza parcial: ' + e.message.substring(0, 50), 'err'); }
+    setT(0, 'done');
+
+    // ─── T1: CLAUDE — CRIAR MARCA ─────────────────
+    setT(1, 'running');
+    setP(8, 'Claude IA criando marca única...');
+    if (claudeKey) {
+      try {
+        log('Claude IA gerando marca, slogan e produtos únicos...', 'ai');
+        const p = `You are an expert e-commerce brand strategist and copywriter. Create a unique, professional brand for a ${n.label} dropshipping store inspired by: ${n.refs.join(', ')}.
+
+IMPORTANT: No trademarked brands, no logos, no registered names. Create something original.
+
+Return ONLY raw JSON (zero markdown, zero backticks, zero explanation):
+{
+  "nome": "Creative 1-2 word brand name, original, no trademark issues",
+  "slogan": "Powerful 4-6 word slogan in English",
+  "hero_titulo": "Impactful hero banner headline, max 5 words English",
+  "hero_sub": "Hero subtitle, max 12 words, aspirational English",
+  "descricao": "2 sentence brand story in English, emotional and professional",
+  "produtos": [
+    ${allProds.slice(0, qty).map((prod, i) => `{
+      "title": "Creative unique product name in English",
+      "type": "${prod.type}",
+      "price": "${prod.price}",
+      "compare": "${prod.compare || ''}",
+      "desc": "Persuasive 2-3 sentence product description in English, focus on benefits and emotion, no brand names"
+    }`).join(',\n    ')}
+  ]
+}`;
+        const resp = await claudeAPI(p, claudeKey, 3500);
+        const clean = resp.replace(/```json\n?|\n?```/g, '').trim();
+        const parsed = JSON.parse(clean);
+        marca = { ...marca, ...parsed };
+        loja.marca = marca.nome;
+        log(`✦ Marca: "${marca.nome}" — "${marca.slogan}"`, 'ai');
+      } catch(e) {
+        log('Claude marca: usando padrão — ' + e.message.substring(0, 50), 'err');
+      }
+    } else {
+      log('Sem Claude API — usando dados padrão do nicho', 'info');
+    }
+    setT(1, 'done');
+
+    // ─── T2: COLEÇÕES ─────────────────────────────
+    setT(2, 'running');
+    setP(14, 'Criando coleções...');
+    const cols = {};
+    for (const colName of n.collections) {
+      try {
+        const r = await shopifyAPI(url, token, 'POST', '/custom_collections.json', {
+          custom_collection: { title: colName, published: true }
+        });
+        cols[colName] = r.custom_collection?.id;
+        log(`Coleção: ${colName}`, 'ok');
+      } catch(e) { log('Col: ' + e.message.substring(0, 40), 'err'); }
+    }
+    setT(2, 'done');
+
+    // ─── T3: PRODUTOS ─────────────────────────────
+    setT(3, 'running');
+    setP(22, 'Criando produtos...');
+    const createdProds = [];
+    const prodsParaCriar = marca.produtos?.length ? [...marca.produtos, ...n.accessories] : allProds;
+
+    for (let i = 0; i < prodsParaCriar.length; i++) {
+      const p = prodsParaCriar[i];
+      try {
+        const isAcc = parseFloat(p.price) < 5;
+        const body = {
+          product: {
+            title: p.title,
+            body_html: `<p>${p.desc}</p>
+<ul>
+  <li>✓ Free worldwide shipping on every order</li>
+  <li>✓ 30-day hassle-free returns</li>
+  <li>✓ Premium quality guaranteed</li>
+  <li>✓ Gift-ready packaging included</li>
+</ul>`,
+            vendor: marca.nome,
+            product_type: p.type,
+            tags: `${nicho},${p.type},${isAcc ? 'accessory,budget-friendly' : 'bestseller,featured'}`,
+            status: 'active',
+            variants: [{
+              price: p.price,
+              compare_at_price: p.compare || '',
+              inventory_management: 'shopify',
+              inventory_quantity: 999,
+              requires_shipping: true
+            }]
+          }
+        };
+        const r = await shopifyAPI(url, token, 'POST', '/products.json', body);
+        if (r.product?.id) {
+          createdProds.push({ id: r.product.id, title: p.title, idx: i });
+          log(`Produto ${i + 1}: ${p.title.substring(0, 35)}`, 'ok');
+        }
+      } catch(e) { log(`Prod ${i + 1} erro: ` + e.message.substring(0, 40), 'err'); }
+    }
+
+    // Adicionar às coleções
+    const bsId = cols[n.collections[0]];
+    const naId = cols[n.collections[1]];
+    for (let i = 0; i < createdProds.length; i++) {
+      try {
+        if (bsId && i < qty) await shopifyAPI(url, token, 'POST', `/custom_collections/${bsId}/collects.json`, { collect: { product_id: createdProds[i].id, collection_id: bsId } });
+        if (naId && i < Math.min(4, qty)) await shopifyAPI(url, token, 'POST', `/custom_collections/${naId}/collects.json`, { collect: { product_id: createdProds[i].id, collection_id: naId } });
+      } catch(e) {}
+    }
+    log(`${createdProds.length} produtos criados e adicionados às coleções`, 'ok');
+    setT(3, 'done');
+
+    // ─── T4: UPLOAD FOTOS ─────────────────────────
+    setT(4, 'running');
+    setP(32, 'Enviando fotos dos produtos...');
+    let uploadsOk = 0;
+    for (let i = 0; i < createdProds.length; i++) {
+      const file = imgs.produtos[i];
+      if (file && createdProds[i]) {
+        try {
+          const b64 = await fileToB64(file);
+          await shopifyAPI(url, token, 'POST', `/products/${createdProds[i].id}/images.json`, {
+            image: { attachment: b64, alt: createdProds[i].title }
+          });
+          uploadsOk++;
+          log(`Foto ${i + 1}: ${createdProds[i].title.substring(0, 25)}`, 'ok');
+        } catch(e) { log(`Foto ${i + 1} erro: ` + e.message.substring(0, 40), 'err'); }
+      }
+    }
+    if (uploadsOk === 0) log('Nenhuma foto anexada — adicione fotos nos campos acima', 'info');
+    setT(4, 'done');
+
+    // ─── T5: PÁGINAS ──────────────────────────────
+    setT(5, 'running');
+    setP(42, 'Criando páginas...');
+    const pages = [
+      {
+        title: 'About Us',
+        body_html: `<h2>Welcome to ${marca.nome}</h2>
+<p><em>${marca.slogan}</em></p>
+<p>${marca.descricao || `At ${marca.nome}, we are obsessed with quality, style and delivering an exceptional experience to every customer. Our carefully curated collection brings together the finest products, designed with intention and crafted to last.`}</p>
+<h3>Our Promise to You</h3>
+<ul>
+  <li>✓ Free worldwide shipping on every order</li>
+  <li>✓ 30-day hassle-free returns, no questions asked</li>
+  <li>✓ Premium quality guaranteed on every item</li>
+  <li>✓ Customer support that actually cares</li>
+</ul>
+<p>Thank you for choosing ${marca.nome}. We exist to make you look and feel your absolute best.</p>`
+      },
+      {
+        title: 'FAQ',
+        body_html: `<h2>Frequently Asked Questions</h2>
+<h3>Shipping & Delivery</h3>
+<p><strong>How long does shipping take?</strong><br>Standard delivery takes 7-14 business days worldwide. You'll receive tracking information as soon as your order ships.</p>
+<p><strong>Do you ship worldwide?</strong><br>Yes! We offer free shipping to most countries with no minimum order.</p>
+<p><strong>Will I receive a tracking number?</strong><br>Absolutely. You'll receive an email with tracking details within 3 business days of placing your order.</p>
+<h3>Returns & Refunds</h3>
+<p><strong>What is your return policy?</strong><br>We offer a full 30-day return window from the date of delivery. Items must be unused and in original condition.</p>
+<p><strong>How do I start a return?</strong><br>Email us at support@${url.split('.')[0]}.com with your order number and we'll guide you through the process.</p>
+<h3>Products & Payments</h3>
+<p><strong>What payment methods do you accept?</strong><br>We accept all major credit cards, PayPal, Apple Pay, and Google Pay.</p>
+<p><strong>Are your products high quality?</strong><br>Absolutely. Every product is carefully selected and quality-checked before being listed in our store.</p>
+<p><strong>Can I change or cancel my order?</strong><br>Contact us within 24 hours of placing your order and we'll do our best to accommodate changes.</p>`
+      },
+      {
+        title: 'Size Guide',
+        body_html: `<h2>Size Guide</h2>
+<p>Use our guide below to find your perfect size. When between sizes, we recommend sizing up for the most comfortable fit.</p>
+<table border="1" cellpadding="12" style="border-collapse:collapse;width:100%;max-width:600px;">
+<thead><tr style="background:#f5f5f5;"><th>Size</th><th>US</th><th>EU</th><th>Measurement</th></tr></thead>
+<tbody>
+<tr><td>XS</td><td>0-2</td><td>32-34</td><td>Under 14"</td></tr>
+<tr><td>S</td><td>4-6</td><td>36-38</td><td>14"–15"</td></tr>
+<tr><td>M</td><td>8-10</td><td>40-42</td><td>15"–16"</td></tr>
+<tr><td>L</td><td>12-14</td><td>44-46</td><td>16"–17"</td></tr>
+<tr><td>XL</td><td>16-18</td><td>48-50</td><td>17"–18"</td></tr>
+<tr><td>XXL</td><td>20-22</td><td>52-54</td><td>18"–19"</td></tr>
+</tbody></table>
+<p style="margin-top:1.5rem;"><strong>Need help?</strong> Contact us at support@${url.split('.')[0]}.com and we'll help you find the perfect fit.</p>`
+      },
+      {
+        title: 'Track Your Order',
+        body_html: `<h2>Track Your Order</h2>
+<p>Once your order ships, you'll receive a confirmation email with your tracking number. Use this to track your package in real-time.</p>
+<h3>Estimated Delivery Times</h3>
+<ul>
+  <li>🇺🇸 <strong>United States:</strong> 5–10 business days</li>
+  <li>🇨🇦 <strong>Canada:</strong> 7–14 business days</li>
+  <li>🇬🇧 <strong>United Kingdom:</strong> 7–12 business days</li>
+  <li>🇪🇺 <strong>Europe:</strong> 10–15 business days</li>
+  <li>🇦🇺 <strong>Australia / NZ:</strong> 10–18 business days</li>
+  <li>🌍 <strong>Rest of World:</strong> 14–21 business days</li>
+</ul>
+<p>Haven't received your tracking number within 3 business days? Contact us at support@${url.split('.')[0]}.com and we'll look into it immediately.</p>`
+      },
+      {
+        title: 'Contact Us',
+        body_html: `<h2>Contact Us</h2>
+<p>We're here to help! Reach out and we'll respond within 24 hours, Monday through Friday.</p>
+<h3>Customer Support</h3>
+<p>📧 <strong>Email:</strong> support@${url.split('.')[0]}.com</p>
+<p>⏰ <strong>Hours:</strong> Monday–Friday, 9am–6pm EST</p>
+<h3>For Order Issues</h3>
+<p>Please include your order number in any message for faster assistance. We take every inquiry seriously and aim to resolve all issues within 24 hours.</p>
+<h3>Business Inquiries</h3>
+<p>📧 hello@${url.split('.')[0]}.com</p>`
+      }
+    ];
+    for (const page of pages) {
+      try {
+        await shopifyAPI(url, token, 'POST', '/pages.json', { page: { ...page, published: true } });
+        log(`Página: ${page.title}`, 'ok');
+      } catch(e) { log('Página erro: ' + e.message.substring(0, 40), 'err'); }
+    }
+    setT(5, 'done');
+
+    // ─── T6: POLÍTICAS ────────────────────────────
+    setT(6, 'running');
+    setP(50, 'Criando políticas...');
+    const policies = [
+      { title: 'Privacy Policy', body_html: `<h1>Privacy Policy</h1><p>Last updated: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p><p>At ${marca.nome}, we are committed to protecting your privacy and ensuring a safe, secure online experience for all our customers.</p><h2>Information We Collect</h2><p>We collect information you provide when placing orders: your name, email address, shipping address, and payment information. All payment data is processed securely through Shopify Payments and is never stored on our servers.</p><h2>How We Use Your Information</h2><ul><li>To process and fulfill your orders</li><li>To send order confirmations and shipping updates</li><li>To provide responsive customer support</li><li>To improve our products and shopping experience</li></ul><h2>Data Security</h2><p>We implement industry-standard SSL encryption and security measures to protect your personal information at all times. Your trust is our priority.</p><h2>Your Rights (GDPR/CCPA)</h2><p>You have the right to access, rectify, erase, and port your personal data at any time. Contact us at privacy@${url.split('.')[0]}.com to exercise these rights.</p>` },
+      { title: 'Refund Policy', body_html: `<h1>Refund Policy</h1><h2>30-Day Return Window</h2><p>We stand behind everything we sell. If you're not completely satisfied, we offer a full 30-day return window from the date of delivery. Items must be unused, unworn, and in original packaging with all tags attached.</p><h2>How to Initiate a Return</h2><ol><li>Email support@${url.split('.')[0]}.com with your order number and reason for return</li><li>We'll respond within 24 hours with return instructions</li><li>Ship the item back using the provided instructions</li><li>Refund will be processed within 5-7 business days of receiving the return</li></ol><h2>Defective or Wrong Items</h2><p>If you received a defective or incorrect item, we sincerely apologize. We will cover all return shipping costs and send a replacement or issue a full refund immediately — your choice.</p><h2>Non-Returnable Items</h2><ul><li>Items returned after 30 days from delivery</li><li>Items showing signs of use, wear, or damage</li><li>Items marked as "Final Sale"</li></ul>` },
+      { title: 'Shipping Policy', body_html: `<h1>Shipping Policy</h1><h2>Free Worldwide Shipping on Every Order</h2><p>We believe in total transparency. We offer free standard shipping to most countries worldwide with absolutely no minimum order value required.</p><h2>Processing Time</h2><p>Orders are processed within 1-3 business days. You'll receive a shipping confirmation email with tracking information as soon as your order ships.</p><h2>Estimated Delivery Times</h2><ul><li><strong>United States:</strong> 5–10 business days</li><li><strong>Canada:</strong> 7–14 business days</li><li><strong>United Kingdom:</strong> 7–12 business days</li><li><strong>Europe:</strong> 10–15 business days</li><li><strong>Australia / NZ:</strong> 10–18 business days</li><li><strong>Rest of World:</strong> 14–21 business days</li></ul><p><strong>Note:</strong> These are estimates. Actual delivery may vary due to customs processing, local holidays, or carrier delays.</p>` },
+      { title: 'Terms of Service', body_html: `<h1>Terms of Service</h1><p>By accessing and using ${marca.nome}, you agree to be bound by these Terms of Service and all applicable laws.</p><h2>Use of Our Site</h2><p>You may use our site for lawful purposes only. You agree not to engage in any activity that disrupts or interferes with our services, servers, or networks.</p><h2>Product Information & Pricing</h2><p>We reserve the right to modify prices, discontinue products, and update product information at any time without prior notice. Product images are for illustrative purposes — actual products may vary slightly.</p><h2>Intellectual Property</h2><p>All content on this site — including images, copy, branding, and design — is owned by ${marca.nome} and protected by copyright law. Unauthorized use is prohibited.</p><h2>Limitation of Liability</h2><p>${marca.nome} shall not be liable for any indirect, incidental, special, or consequential damages arising from the use of our products or services.</p><h2>Governing Law</h2><p>These terms are governed by the laws of the United States. Any disputes will be resolved in the appropriate courts.</p>` }
+    ];
+    for (const policy of policies) {
+      try {
+        await shopifyAPI(url, token, 'POST', '/pages.json', { page: { ...policy, published: true } });
+        log(`Política: ${policy.title}`, 'ok');
+      } catch(e) { log('Política erro: ' + e.message.substring(0, 40), 'err'); }
+    }
+    setT(6, 'done');
+
+    // ─── T7: BLOG COM CLAUDE ──────────────────────
+    setT(7, 'running');
+    setP(58, 'Criando blog SEO...');
+    try {
+      const blogsData = await shopifyAPI(url, token, 'GET', '/blogs.json');
+      const blogId = blogsData.blogs?.[0]?.id;
+      if (blogId) {
+        let articles = [];
+        if (claudeKey) {
+          try {
+            log('Claude IA escrevendo artigos SEO únicos...', 'ai');
+            const blogResp = await claudeAPI(
+              `Write 2 high-quality SEO blog articles for "${marca.nome}", a ${n.label} store. Reference brands: ${n.refs.join(', ')}.
+Return ONLY raw JSON (no markdown, no backticks):
+{"articles":[{"title":"SEO-optimized title article 1","body_html":"<h2>Section 1</h2><p>Content min 250 words...</p>"},{"title":"SEO-optimized title article 2","body_html":"<h2>Section 1</h2><p>Content min 250 words...</p>"}]}`,
+              claudeKey, 2500
+            );
+            const blogClean = blogResp.replace(/```json\n?|\n?```/g, '').trim();
+            articles = JSON.parse(blogClean).articles || [];
+          } catch(e) { log('Blog Claude erro: ' + e.message.substring(0, 40), 'err'); }
+        }
+        if (!articles.length) {
+          articles = [
+            { title: `The Complete Guide to ${n.label} in 2025`, body_html: `<p>Discover everything you need to know about ${n.label.toLowerCase()} and how ${marca.nome} is redefining the experience.</p><h2>Why Quality Matters</h2><p>At ${marca.nome}, we believe every product should exceed expectations. Our ${n.label.toLowerCase()} collection is curated with one goal: to give you the best possible experience.</p><h2>How to Choose the Right Product</h2><p>With so many options available, choosing can feel overwhelming. Focus on what matters most to you — fit, quality, or style. Our team has done the research so you don't have to.</p><h2>Our Guarantee</h2><p>Every product at ${marca.nome} comes with free worldwide shipping and our 30-day guarantee. Shop with total confidence.</p>` },
+            { title: `Why ${marca.nome} Stands Out from the Crowd`, body_html: `<p>${marca.nome} was built with a simple mission: deliver premium ${n.label.toLowerCase()} products at fair prices, with the service you deserve.</p><h2>The ${marca.nome} Difference</h2><p>We source only the finest products, test them rigorously, and stand behind every single one. When you shop with us, you shop with confidence.</p><h2>Our Values</h2><p>Quality over quantity. Transparency over hype. Customer satisfaction above all else. These aren't just words — they're how we operate every single day.</p><h2>Join Our Community</h2><p>Over thousands of satisfied customers trust ${marca.nome}. Join them today and experience the difference quality makes.</p>` }
+          ];
+        }
+        for (const art of articles) {
+          await shopifyAPI(url, token, 'POST', `/blogs/${blogId}/articles.json`, { article: { ...art, published: true } });
+          log(`Artigo: ${art.title.substring(0, 40)}...`, 'ok');
+        }
+      }
+    } catch(e) { log('Blog erro: ' + e.message.substring(0, 40), 'err'); }
+    setT(7, 'done');
+
+    // ─── T8: FRETE ────────────────────────────────
+    setT(8, 'running');
+    setP(63, 'Configurando frete...');
+    try {
+      const zones = await shopifyAPI(url, token, 'GET', '/shipping_zones.json');
+      for (const zone of (zones.shipping_zones || [])) {
+        await shopifyAPI(url, token, 'POST', `/shipping_zones/${zone.id}/price_based_shipping_rates.json`, {
+          price_based_shipping_rate: { name: 'Free Shipping', price: '0.00' }
+        });
+      }
+      log('Frete grátis configurado', 'ok');
+    } catch(e) { log('Frete: configure em Settings → Shipping', 'ok'); }
+    setT(8, 'done');
+
+    // ─── T9: DETECTAR TEMA ────────────────────────
+    setT(9, 'running');
+    setP(67, 'Detectando tema ativo...');
+    let themeId = null;
+    try {
+      const themesData = await shopifyAPI(url, token, 'GET', '/themes.json');
+      const active = (themesData.themes || []).find(t => t.role === 'main');
+      if (!active) throw new Error('Tema ativo não encontrado');
+      themeId = active.id;
+      log(`Tema ativo: ${active.name}`, 'ok');
+    } catch(e) { log('Tema: ' + e.message, 'err'); }
+    setT(9, 'done');
+
+    // ─── T10: CLAUDE — EDITAR TEMA ────────────────
+    setT(10, 'running');
+    setP(72, 'Claude IA lendo e editando tema...');
+    if (themeId) {
+      try {
+        // Ler settings_data.json real
+        log('Lendo settings_data.json...', 'info');
+        const sRes = await shopifyAPI(url, token, 'GET', `/themes/${themeId}/assets.json?asset[key]=config/settings_data.json`);
+        const settingsRaw = sRes.asset?.value || '{}';
+        const settingsObj = JSON.parse(settingsRaw);
+
+        if (claudeKey) {
+          log('Claude IA analisando tema e gerando edições profissionais...', 'ai');
+
+          const themePrompt = `You are a world-class Shopify Dawn theme developer. Create a complete professional theme for a "${n.label}" store called "${marca.nome}", inspired by: ${n.refs.join(', ')}.
+
+Store details:
+- Brand name: ${marca.nome}
+- Slogan: ${marca.slogan}
+- Niche: ${nicho}
+- Accent color: ${n.cores.accent}
+- Dark/secondary color: ${n.cores.secondary}
+- Background: ${n.cores.bg}
+- Text color: ${n.cores.texto}
+- Font style: ${n.fonte}
+- Hero title: ${marca.hero_titulo}
+- Hero subtitle: ${marca.hero_sub}
+- Announcement bar text: ${n.announcement}
+- Has banner image: ${imgs.bannerD ? 'YES - use dg-banner-desktop.jpg' : 'NO - use solid background'}
+- Has mobile banner: ${imgs.bannerM ? 'YES - use dg-banner-mobile.jpg' : 'NO'}
+- Has logo image: ${imgs.logo ? 'YES - use dg-logo file' : 'NO - display brand name as text'}
+
+Reference stores style analysis:
+- ${n.refs[0]}: Clean, premium, white space, high-quality imagery
+- ${n.refs[1]}: Community-driven, trust signals, lifestyle
+- ${n.refs[2]}: Modern, editorial, conversion-focused
+
+Current Dawn settings_data.json (for reference):
+${settingsRaw.substring(0, 800)}
+
+Return ONLY valid raw JSON (absolutely no markdown, no backticks, no explanation before or after):
+{
+  "settings_patch": {
+    "colors_solid_button_labels": "#ffffff",
+    "colors_accent_1": "${n.cores.accent}",
+    "colors_accent_2": "${n.cores.secondary}",
+    "colors_text": "${n.cores.texto}",
+    "colors_background_1": "${n.cores.bg}",
+    "colors_background_2": "#f5f5f5",
+    "colors_outline_button_labels": "${n.cores.accent}",
+    "heading_scale": 100,
+    "body_scale": 100
+  },
+  "global_css": "Write 40+ lines of professional CSS targeting real Dawn theme CSS classes. Include: .announcement-bar with background ${n.cores.secondary} and color ${n.cores.accent}; .announcement-bar__message color; .header styling; .card hover effects; .button--primary colors; .price styling; .badge--sale; h1,h2,h3 font-family; .footer; .product__title; .product-form__submit button; trust badge CSS. Make it look exactly like ${n.refs[0]}. Use !important where needed to override Dawn defaults.",
+  "hero_liquid": "Complete valid Shopify Liquid file for sections/dg-hero.liquid. Start with {%- style -%} block containing ALL CSS with real class names (dg-hero, dg-hero__overlay, dg-hero__inner, dg-hero__eyebrow, dg-hero__h1, dg-hero__p, dg-hero__btn). ${imgs.bannerD ? "In CSS: .dg-hero { background-image: url({{ 'dg-banner-desktop.jpg' | asset_url }}); background-size: cover; background-position: center; }" : `In CSS: .dg-hero { background: ${n.cores.secondary}; }`} Include full dark overlay. Then HTML section with eyebrow text, h1 title '${marca.hero_titulo}', p subtitle '${marca.hero_sub}', a.dg-hero__btn linking to /collections/all. End with {% schema %} JSON with name DG Hero and preset.",
+  "benefits_liquid": "Complete valid Shopify Liquid file for sections/dg-benefits.liquid. {%- style -%} with CSS for .dg-ben container, .dg-ben__grid, .dg-ben__item, .dg-ben__icon color ${n.cores.accent}, .dg-ben__title, .dg-ben__sub. Then HTML with 4 items: ${n.benefits.map(b => b.title + ' / ' + b.sub).join(' | ')}. End with {% schema %} preset.",
+  "testimonials_liquid": "Complete valid Shopify Liquid file for sections/dg-test.liquid. Professional 3-column testimonials. {%- style -%} with full CSS. 3 reviews with 5 stars using color ${n.cores.accent}, review text, customer name and location. End with {% schema %} preset.",
+  "newsletter_liquid": "Complete valid Shopify Liquid file for sections/dg-news.liquid. Email capture section. Background ${n.cores.secondary}. {%- style -%} with full CSS. Title '${qty <= 5 ? 'Get 10% Off Your First Order' : 'Join Our Community'}', subtitle, email input + subscribe button color ${n.cores.accent}. End with {% schema %} preset."
+}`;
+
+          const themeResp = await claudeAPI(themePrompt, claudeKey, 6000);
+          let themeData;
+          try {
+            const tc = themeResp.replace(/^```json\s*/m, '').replace(/\s*```\s*$/m, '').trim();
+            themeData = JSON.parse(tc);
+          } catch(pe) {
+            const m = themeResp.match(/\{[\s\S]*\}/);
+            if (m) themeData = JSON.parse(m[0]);
+            else throw new Error('JSON do Claude inválido: ' + pe.message);
+          }
+
+          log('Claude gerou tema profissional ✦', 'ai');
+
+          // Aplicar settings
+          if (themeData.settings_patch) {
+            const cur = settingsObj.current || {};
+            Object.assign(cur, themeData.settings_patch);
+            settingsObj.current = cur;
+            await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, {
+              asset: { key: 'config/settings_data.json', value: JSON.stringify(settingsObj, null, 2) }
+            });
+            log('Dawn settings aplicados', 'ok');
+          }
+
+          // CSS global
+          if (themeData.global_css) {
+            await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, {
+              asset: { key: 'assets/dg-custom.css', value: `/* Drop Global v10 — ${n.label} — Gerado por Claude IA */\n\n${themeData.global_css}` }
+            });
+            log('CSS profissional aplicado', 'ok');
+          }
+
+          // Seções Liquid
+          const liquidFiles = [
+            { key: 'sections/dg-hero.liquid', content: themeData.hero_liquid },
+            { key: 'sections/dg-benefits.liquid', content: themeData.benefits_liquid },
+            { key: 'sections/dg-test.liquid', content: themeData.testimonials_liquid },
+            { key: 'sections/dg-news.liquid', content: themeData.newsletter_liquid }
+          ];
+          for (const lf of liquidFiles) {
+            if (lf.content) {
+              await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, {
+                asset: { key: lf.key, value: lf.content }
+              });
+              log(`Seção Liquid: ${lf.key.split('/').pop()}`, 'ok');
+            }
+          }
+
+        } else {
+          // Sem Claude — CSS padrão profissional
+          const cur = settingsObj.current || {};
+          Object.assign(cur, {
+            colors_accent_1: n.cores.accent,
+            colors_accent_2: n.cores.secondary,
+            colors_text: n.cores.texto,
+            colors_background_1: n.cores.bg,
+            colors_background_2: '#f5f5f5'
+          });
+          settingsObj.current = cur;
+          await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, {
+            asset: { key: 'config/settings_data.json', value: JSON.stringify(settingsObj, null, 2) }
+          });
+
+          const defCSS = `/* Drop Global v10 — ${n.label} */
+.announcement-bar { background-color: ${n.cores.secondary} !important; color: ${n.cores.accent} !important; font-size: 13px !important; letter-spacing: .06em; }
+.announcement-bar__message, .announcement-bar a { color: ${n.cores.accent} !important; }
+.button { border-radius: 0 !important; letter-spacing: .1em; text-transform: uppercase; font-size: 12px; }
+.button--primary { background: ${n.cores.accent} !important; color: #000 !important; border-color: ${n.cores.accent} !important; }
+.button--primary:hover { opacity: .85 !important; }
+.button--secondary { border-color: ${n.cores.texto} !important; color: ${n.cores.texto} !important; }
+.card { border: none !important; box-shadow: none !important; }
+.card:hover { transform: translateY(-4px); transition: transform .25s ease; box-shadow: 0 8px 24px rgba(0,0,0,.08) !important; }
+.card__heading { font-family: ${n.fonte}; font-weight: 400; letter-spacing: -.01em; font-size: 15px; }
+.card__media { background: #f8f8f8; }
+.price--on-sale .price-item--sale { color: ${n.cores.accent}; font-weight: 500; }
+.price-item--regular { color: #999; }
+.badge--sale { background: ${n.cores.accent} !important; color: #000 !important; border-radius: 0 !important; font-size: 10px; letter-spacing: .06em; }
+.header { border-bottom: 1px solid #f0f0f0 !important; }
+.header__heading-logo { max-width: 160px; }
+h1, h2, h3 { font-family: ${n.fonte}; font-weight: 300; letter-spacing: -.02em; }
+.product__title { font-family: ${n.fonte}; font-size: 26px; font-weight: 300; letter-spacing: -.02em; }
+.product__price .price-item--sale { color: ${n.cores.accent}; font-size: 22px; }
+.product-form__submit { border-radius: 0 !important; background: ${n.cores.secondary} !important; color: #fff !important; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; padding: 16px 32px; width: 100%; }
+.product-form__submit:hover { background: ${n.cores.accent} !important; color: #000 !important; }
+.product__description { font-size: 14px; line-height: 1.8; color: #555; }
+.footer { border-top: 2px solid ${n.cores.accent}; }
+.footer__heading { letter-spacing: .08em; text-transform: uppercase; font-size: 11px; }`;
+
+          await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, {
+            asset: { key: 'assets/dg-custom.css', value: defCSS }
+          });
+          log('CSS padrão aplicado', 'ok');
+
+          // Seções padrão
+          const heroLiq = `{%- style -%}
+.dg-hero{position:relative;overflow:hidden;${imgs.bannerD ? `background-image:url({{ 'dg-banner-desktop.jpg' | asset_url }});background-size:cover;background-position:center;` : `background:${n.cores.secondary};`}min-height:82vh;display:flex;align-items:center;}
+.dg-hero__overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.78) 0%,rgba(0,0,0,.28) 100%);z-index:1;}
+.dg-hero__inner{position:relative;z-index:2;max-width:920px;margin:0 auto;padding:5rem 2.5rem;}
+.dg-hero__eye{font-family:${n.fonte};font-size:11px;color:${n.cores.accent};letter-spacing:.35em;text-transform:uppercase;display:block;margin-bottom:1.25rem;}
+.dg-hero__h1{font-family:${n.fonte};font-size:clamp(38px,5.5vw,76px);font-weight:300;color:#fff;line-height:1.04;letter-spacing:-.025em;margin-bottom:1.5rem;}
+.dg-hero__p{font-size:18px;color:rgba(255,255,255,.72);margin-bottom:2.5rem;max-width:500px;line-height:1.65;font-weight:300;}
+.dg-hero__btn{display:inline-block;padding:17px 48px;background:${n.cores.accent};color:#000;font-family:${n.fonte};font-size:13px;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;transition:opacity .2s;}
+.dg-hero__btn:hover{opacity:.82;}
+@media(max-width:749px){.dg-hero{min-height:62vh;${imgs.bannerM ? `background-image:url({{ 'dg-banner-mobile.jpg' | asset_url }});` : ''}}.dg-hero__inner{padding:3rem 1.5rem;}.dg-hero__h1{font-size:clamp(30px,9vw,52px);}}
+{%- endstyle -%}
+<section class="dg-hero"><div class="dg-hero__overlay"></div><div class="dg-hero__inner"><span class="dg-hero__eye">New Collection</span><h1 class="dg-hero__h1">${marca.hero_titulo}</h1><p class="dg-hero__p">${marca.hero_sub}</p><a href="/collections/all" class="dg-hero__btn">Shop Now</a></div></section>
+{% schema %}{"name":"DG Hero","presets":[{"name":"DG Hero"}]}{% endschema %}`;
+
+          const benLiq = `{%- style -%}
+.dg-ben{background:#f8f8f8;border-top:1px solid #ebebeb;border-bottom:1px solid #ebebeb;padding:1.75rem 2rem;}
+.dg-ben__g{max-width:960px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:1rem;text-align:center;}
+.dg-ben__i{padding:.875rem .5rem;}
+.dg-ben__ic{font-size:20px;margin-bottom:8px;color:${n.cores.accent};display:block;}
+.dg-ben__t{font-family:${n.fonte};font-size:13px;font-weight:500;color:${n.cores.texto};display:block;margin-bottom:3px;}
+.dg-ben__s{font-size:11px;color:#888;display:block;}
+{%- endstyle -%}
+<section class="dg-ben"><div class="dg-ben__g">${n.benefits.map(b => `<div class="dg-ben__i"><span class="dg-ben__ic">${b.icon}</span><span class="dg-ben__t">${b.title}</span><span class="dg-ben__s">${b.sub}</span></div>`).join('')}</div></section>
+{% schema %}{"name":"DG Benefits","presets":[{"name":"DG Benefits"}]}{% endschema %}`;
+
+          const testLiq = `{%- style -%}
+.dg-test{background:#fff;padding:4.5rem 2rem;text-align:center;}
+.dg-test h2{font-family:${n.fonte};font-size:32px;font-weight:300;color:${n.cores.texto};margin-bottom:2.5rem;letter-spacing:-.025em;}
+.dg-test__g{max-width:960px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:1.5rem;}
+.dg-test__c{background:#f9f9f9;padding:1.5rem;text-align:left;border-top:3px solid ${n.cores.accent};}
+.dg-test__s{color:${n.cores.accent};font-size:13px;letter-spacing:2px;margin-bottom:.75rem;}
+.dg-test__t{font-size:13px;color:#555;line-height:1.75;margin-bottom:1rem;font-style:italic;}
+.dg-test__a{font-size:12px;font-weight:500;color:${n.cores.texto};}
+{%- endstyle -%}
+<section class="dg-test"><h2>What Our Customers Say</h2><div class="dg-test__g"><div class="dg-test__c"><div class="dg-test__s">★★★★★</div><p class="dg-test__t">"Absolutely love my purchase. Quality exceeded my expectations. Fast shipping and beautiful packaging. Will definitely order again."</p><div class="dg-test__a">Sarah M. — New York, USA</div></div><div class="dg-test__c"><div class="dg-test__s">★★★★★</div><p class="dg-test__t">"Blown away by the quality. Perfect fit and stunning craftsmanship. Already recommended to all my friends."</p><div class="dg-test__a">James K. — London, UK</div></div><div class="dg-test__c"><div class="dg-test__s">★★★★★</div><p class="dg-test__t">"Fast delivery, premium quality, exactly as described. Customer service was super helpful. 10/10 overall."</p><div class="dg-test__a">Emma L. — Toronto, Canada</div></div></div></section>
+{% schema %}{"name":"DG Testimonials","presets":[{"name":"DG Testimonials"}]}{% endschema %}`;
+
+          const newsLiq = `{%- style -%}
+.dg-news{background:${n.cores.secondary};padding:4.5rem 2rem;text-align:center;}
+.dg-news h2{font-family:${n.fonte};font-size:28px;font-weight:300;color:#fff;margin-bottom:.75rem;letter-spacing:-.02em;}
+.dg-news p{font-size:14px;color:rgba(255,255,255,.62);margin-bottom:2rem;}
+.dg-news__row{display:flex;max-width:440px;margin:0 auto;}
+.dg-news__inp{flex:1;padding:14px 16px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:#fff;font-size:13px;outline:none;}
+.dg-news__inp::placeholder{color:rgba(255,255,255,.38);}
+.dg-news__btn{padding:14px 26px;background:${n.cores.accent};color:#000;font-size:11px;letter-spacing:.12em;text-transform:uppercase;border:none;cursor:pointer;font-weight:500;white-space:nowrap;}
+.dg-news__btn:hover{opacity:.85;}
+{%- endstyle -%}
+<section class="dg-news"><h2>Get 10% Off Your First Order</h2><p>Join our community for exclusive offers and new arrivals first.</p><div class="dg-news__row"><input type="email" class="dg-news__inp" placeholder="Your email address"/><button class="dg-news__btn">Subscribe</button></div></section>
+{% schema %}{"name":"DG Newsletter","presets":[{"name":"DG Newsletter"}]}{% endschema %}`;
+
+          for (const [k, v] of [
+            ['sections/dg-hero.liquid', heroLiq],
+            ['sections/dg-benefits.liquid', benLiq],
+            ['sections/dg-test.liquid', testLiq],
+            ['sections/dg-news.liquid', newsLiq]
+          ]) {
+            await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, { asset: { key: k, value: v } });
+          }
+          log('Seções padrão criadas', 'ok');
+        }
+
+      } catch(e) { log('Tema erro: ' + e.message.substring(0, 70), 'err'); }
+    }
+    setT(10, 'done');
+
+    // ─── T11: UPLOAD LOGO E BANNERS ───────────────
+    setT(11, 'running');
+    setP(84, 'Upload logo e banners...');
+    if (themeId) {
+      // Logo
+      if (imgs.logo) {
+        try {
+          const b64 = await fileToB64(imgs.logo);
+          const ext = imgs.logo.name.split('.').pop().toLowerCase();
+          const logoKey = `assets/dg-logo.${ext === 'svg' ? 'svg' : 'png'}`;
+          await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, { asset: { key: logoKey, attachment: b64 } });
+          // CSS para mostrar logo
+          const curCSSRes = await shopifyAPI(url, token, 'GET', `/themes/${themeId}/assets.json?asset[key]=assets/dg-custom.css`);
+          const curCSS = curCSSRes.asset?.value || '';
+          const logoCSS = `\n/* Logo */\n.header__heading-logo { display: none !important; }\n.header__heading-link::after { content: ''; display: block; width: 160px; height: 44px; background-image: url({{ '${logoKey.replace('assets/', '')}' | asset_url }}); background-size: contain; background-repeat: no-repeat; background-position: left center; }\n`;
+          await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, { asset: { key: 'assets/dg-custom.css', value: curCSS + logoCSS } });
+          log('Logo enviado e aplicado', 'ok');
+        } catch(e) { log('Logo: ' + e.message.substring(0, 50), 'err'); }
+      }
+      // Banner D
+      if (imgs.bannerD) {
+        try {
+          const b64 = await fileToB64(imgs.bannerD);
+          await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, { asset: { key: 'assets/dg-banner-desktop.jpg', attachment: b64 } });
+          log('Banner desktop enviado', 'ok');
+        } catch(e) { log('Banner D: ' + e.message.substring(0, 40), 'err'); }
+      }
+      // Banner M
+      if (imgs.bannerM) {
+        try {
+          const b64 = await fileToB64(imgs.bannerM);
+          await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, { asset: { key: 'assets/dg-banner-mobile.jpg', attachment: b64 } });
+          log('Banner mobile enviado', 'ok');
+        } catch(e) { log('Banner M: ' + e.message.substring(0, 40), 'err'); }
+      }
+    }
+    setT(11, 'done');
+
+    // ─── T12: HOMEPAGE index.json ─────────────────
+    setT(12, 'running');
+    setP(90, 'Reescrevendo homepage Dawn...');
+    if (themeId) {
+      try {
+        const uid = () => Math.random().toString(36).substring(2, 10);
+        const H=uid(),B=uid(),F=uid(),R=uid(),rH=uid(),rT=uid(),rB=uid(),T=uid(),N=uid();
+
+        // Determinar nomes das seções (com ou sem Claude)
+        const heroType = 'dg-hero';
+        const benType = 'dg-benefits';
+        const testType = claudeKey ? 'dg-test' : 'dg-test';
+        const newsType = claudeKey ? 'dg-news' : 'dg-news';
+
+        const idx = {
+          sections: {
+            [H]: { type: heroType, settings: {} },
+            [B]: { type: benType, settings: {} },
+            [F]: {
+              type: 'featured-collection',
+              settings: {
+                title: 'Best Sellers', products_to_show: 4,
+                columns_desktop: 4, columns_mobile: '2',
+                image_ratio: 'adapt', show_secondary_image: true,
+                show_vendor: false, show_rating: false,
+                enable_quick_buy: false, full_width: false,
+                show_view_all: true, view_all_style: 'link',
+                color_scheme: 'scheme-1', padding_top: 56, padding_bottom: 56
+              }
+            },
+            [R]: {
+              type: 'rich-text',
+              blocks: {
+                [rH]: { type: 'heading', settings: { heading: marca.slogan || n.hero_titulo, heading_size: 'h2' } },
+                [rT]: { type: 'text', settings: { text: `<p>${marca.descricao || `At ${marca.nome}, premium quality meets modern style. Every product is chosen with care.`}</p>` } },
+                [rB]: { type: 'button', settings: { button_label: 'Shop All', button_link: '/collections/all', button_style_secondary: false } }
+              },
+              block_order: [rH, rT, rB],
+              settings: { desktop_content_position: 'center', content_alignment: 'center', color_scheme: 'scheme-2', full_width: true, padding_top: 52, padding_bottom: 52 }
+            },
+            [T]: { type: testType, settings: {} },
+            [N]: { type: newsType, settings: {} }
+          },
+          order: [H, B, F, R, T, N]
+        };
+
+        await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'templates/index.json', value: JSON.stringify(idx, null, 2) }
+        });
+        log('Homepage Dawn reescrita com sucesso', 'ok');
+      } catch(e) { log('index.json: ' + e.message.substring(0, 60), 'err'); }
+    }
+    setT(12, 'done');
+
+    // ─── T13: CSS NO THEME.LIQUID ─────────────────
+    setT(13, 'running');
+    setP(96, 'Injetando CSS no theme.liquid...');
+    if (themeId) {
+      try {
+        const tlRes = await shopifyAPI(url, token, 'GET', `/themes/${themeId}/assets.json?asset[key]=layout/theme.liquid`);
+        let tl = tlRes.asset?.value || '';
+        if (!tl.includes('dg-custom.css')) {
+          tl = tl.replace('</head>', `\n  {{ 'dg-custom.css' | asset_url | stylesheet_tag }}\n</head>`);
+          await shopifyAPI(url, token, 'PUT', `/themes/${themeId}/assets.json`, { asset: { key: 'layout/theme.liquid', value: tl } });
+          log('CSS injetado no theme.liquid', 'ok');
+        } else {
+          log('CSS já estava no theme.liquid', 'ok');
+        }
+      } catch(e) { log('theme.liquid: ' + e.message.substring(0, 50), 'err'); }
+    }
+    setT(13, 'done');
+
+    // ─── T14: CONCLUÍDO ───────────────────────────
+    setT(14, 'running');
+    setP(100, '✓ Loja pronta!');
+    log(`🎉 ${marca.nome} — loja profissional criada com sucesso!`, 'ok');
+    if (claudeKey) log(`★ Claude IA: marca única, copy persuasivo, tema ${n.refs[0]}-inspired`, 'ai');
+    setT(14, 'done');
+
+    // Salvar e sincronizar
+    lojas[0] = { ...lojas[0], status: 'pronta', marca: marca.nome };
+    localStorage.setItem('dg_v10', JSON.stringify(lojas));
+    await kvSalvar(lojas[0]);
+    renderAll();
+
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('result-text').textContent = `${marca.nome} (${n.label}) — ${createdProds.length} produtos, tema Dawn editado ${claudeKey ? 'pelo Claude IA' : 'profissionalmente'}, homepage completa, ${pages.length} páginas, 4 políticas, blog SEO. Loja 100% pronta!`;
+
+    btn.textContent = '✓ Loja criada!';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '→ Criar Loja com IA'; rodando = false; }, 5000);
+
+  } catch(err) {
+    log('Erro crítico: ' + err.message, 'err');
+    if (lojas[0]) { lojas[0].status = 'erro'; localStorage.setItem('dg_v10', JSON.stringify(lojas)); }
+    btn.disabled = false; btn.textContent = '→ Criar Loja com IA';
+    rodando = false;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// VERIFICAR VENDAS
+// ══════════════════════════════════════════════════════
+async function checkVendas(loja) {
+  if (!loja.shopifyToken) return null;
+  try {
+    // Buscar pedidos e dados da loja em paralelo
+    const [ordersRes, shopRes] = await Promise.all([
+      fetch(WORKER, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          store_url: loja.url, token: loja.shopifyToken,
+          method: 'GET',
+          endpoint: '/orders.json?status=open,closed&financial_status=paid&limit=250'
+        })
+      }),
+      fetch(WORKER, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          store_url: loja.url, token: loja.shopifyToken,
+          method: 'GET', endpoint: '/shop.json'
+        })
+      })
+    ]);
+
+    const ordersData = await ordersRes.json();
+    const shopData = await shopRes.json();
+    const orders = ordersData.orders || [];
+
+    // Data de criação da loja Shopify
+    const shopCreatedAt = shopData.shop?.created_at
+      ? new Date(shopData.shop.created_at).toLocaleDateString('pt-BR', {
+          day: '2-digit', month: '2-digit', year: 'numeric'
+        })
+      : null;
+
+    // Nome da loja
+    const shopName = shopData.shop?.name || null;
+
+    if (orders.length === 0) {
+      return { count: 0, revenue: '0.00', lastOrder: null, shopCreatedAt, shopName, totalWithCancelled: 0 };
+    }
+
+    // Receita total — exclui cancelados e reembolsados
+    const validOrders = orders.filter(o =>
+      o.cancel_reason === null &&
+      o.cancelled_at === null &&
+      o.financial_status === 'paid'
+    );
+    const revenue = validOrders.reduce((s, o) => s + parseFloat(o.total_price || 0), 0).toFixed(2);
+    const count = validOrders.length;
+
+    // Data do último pedido
+    const lastOrder = orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+    const lastDate = lastOrder ? new Date(lastOrder.created_at).toLocaleDateString('pt-BR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    }) : null;
+
+    return { count, revenue, lastOrder: lastDate, shopCreatedAt, shopName, totalWithCancelled: orders.length };
+  } catch(e) { return null; }
+}
+
+async function checkAll() {
+  setSyncStatus('Verificando vendas...', false);
+  for (let i = 0; i < lojas.length; i++) {
+    const prev = lojas[i].vendas || 0;
+    const r = await checkVendas(lojas[i]);
+    if (r) {
+      if (r.count > prev) {
+        const notif = document.getElementById('notif');
+        document.getElementById('notif-body').textContent = `${lojas[i].url} — ${r.count - prev} novo(s) pedido(s)! Total: $${r.revenue}`;
+        notif.classList.add('show');
+        setTimeout(() => notif.classList.remove('show'), 7000);
+      }
+      lojas[i].vendas = r.count;
+      lojas[i].receita = r.revenue;
+      lojas[i].checkedAt = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      if (r.lastOrder) lojas[i].lastOrder = r.lastOrder;
+      if (r.shopCreatedAt) lojas[i].shopCreatedAt = r.shopCreatedAt;
+      if (r.shopName) lojas[i].shopName = r.shopName;
+      // Status baseado na quantidade de pedidos
+      if (r.count >= 15) lojas[i].status = 'pronta';
+      else if (r.count > 0) lojas[i].status = 'aquecimento';
+      await kvAtualizar(lojas[i].url, r.count, r.revenue, lojas[i].checkedAt);
+    }
+  }
+  localStorage.setItem('dg_v10', JSON.stringify(lojas));
+  renderAll();
+  setSyncStatus('Sincronizado · KV', true);
+}
+
+async function checkAtual() {
+  if (lojaIdx >= 0 && lojas[lojaIdx]) {
+    const r = await checkVendas(lojas[lojaIdx]);
+    if (r) {
+      lojas[lojaIdx].vendas = r.count;
+      lojas[lojaIdx].receita = r.revenue;
+      lojas[lojaIdx].checkedAt = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      localStorage.setItem('dg_v10', JSON.stringify(lojas));
+      await kvAtualizar(lojas[lojaIdx].url, r.count, r.revenue, lojas[lojaIdx].checkedAt);
+      renderAll();
+    }
+  }
+}
+
+async function checkUma(i) {
+  if (!lojas[i]) return;
+  const r = await checkVendas(lojas[i]);
+  if (r) {
+    lojas[i].vendas = r.count; lojas[i].receita = r.revenue;
+    lojas[i].checkedAt = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    if (r.lastOrder) lojas[i].lastOrder = r.lastOrder;
+    if (r.shopCreatedAt) lojas[i].shopCreatedAt = r.shopCreatedAt;
+    if (r.shopName) lojas[i].shopName = r.shopName;
+    // Status baseado na quantidade de pedidos
+    if (r.count >= 15) lojas[i].status = 'pronta';
+    else if (r.count > 0) lojas[i].status = 'aquecimento';
+    localStorage.setItem('dg_v10', JSON.stringify(lojas));
+    await kvAtualizar(lojas[i].url, r.count, r.revenue, lojas[i].checkedAt);
+    renderAll();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════
+
+// Helper para status da loja
+function getStatusInfo(l) {
+  const vendas = l.vendas || 0;
+  if (l.status === 'erro') return { pill: 'pill-err', label: 'Erro', dot: 'var(--rd)' };
+  if (l.status === 'criando') return { pill: 'pill-warn', label: 'Criando...', dot: 'var(--ac)' };
+  if (vendas >= 15) return { pill: 'pill-ok', label: 'Pronta ✓', dot: 'var(--gr)' };
+  if (vendas > 0) return { pill: 'pill-hot', label: `Aquecimento (${vendas}/15)`, dot: '#ff9800' };
+  return { pill: 'pill-warn', label: 'Aguardando', dot: 'var(--ac)' };
+}
+
+function renderAll() {
+  updateStats();
+  renderFarm();
+  renderLojas();
+  renderRanking();
+}
+
+function updateStats() {
+  const total = lojas.length;
+  const prontas = lojas.filter(l => (l.vendas || 0) >= 15).length;
+  const aquecendo = lojas.filter(l => (l.vendas || 0) > 0 && (l.vendas || 0) < 15).length;
+  const receita = lojas.reduce((s, l) => s + parseFloat(l.receita || 0), 0).toFixed(2);
+  const pedidos = lojas.reduce((s, l) => s + (l.vendas || 0), 0);
+  const set = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+  // Desktop sidebar stats
+  set('sb-total', total); set('sb-aquecendo', aquecendo); set('sb-prontas', prontas); set('sb-receita', '$' + receita); set('sb-pedidos', pedidos);
+  // Farm page stats
+  set('f-total', total); set('f-aquecendo', aquecendo); set('f-prontas', prontas); set('f-receita', '$' + receita); set('f-pedidos', pedidos);
+  // Mobile stats bar
+  set('ms-total', total); set('ms-aquecendo', aquecendo); set('ms-prontas', prontas); set('ms-receita', '$' + receita); set('ms-pedidos', pedidos);
+}
+
+// Mobile navigation
+function mobileNav(page, el) {
+  // Ativar página
+  document.querySelectorAll('#page-farm, #page-lojas, #page-ranking').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  // Ativar botão
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  // Render
+  if (page === 'farm') renderFarm();
+  if (page === 'lojas') renderLojas();
+  if (page === 'ranking') renderRanking();
+}
+
+// Inicializar mobile — mostrar farm por padrão
+function initMobile() {
+  if (window.innerWidth <= 768) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-farm').classList.add('active');
+    document.getElementById('mnav-farm')?.classList.add('active');
+  }
+}
+
+function renderFarm() {
+  const el = document.getElementById('farm-list');
+  if (!el) return;
+  if (!lojas.length) { el.innerHTML = '<div class="empty">nenhuma loja ainda — crie sua primeira loja</div>'; return; }
+  el.innerHTML = lojas.map((l, i) => `
+    <div class="farm-row">
+      <div class="farm-dot" style="background:${getStatusInfo(l).dot}"></div>
+      <div class="farm-info">
+        <div class="farm-url">${l.url}</div>
+        <div class="farm-meta">
+          ${l.shopName ? `<b>${l.shopName}</b> · ` : (l.marca ? `<b>${l.marca}</b> · ` : '')}${l.nicho_label || l.nicho}
+          ${l.shopCreatedAt ? `<span style="color:var(--ac);margin-left:4px;">· criada em ${l.shopCreatedAt}</span>` : `· adicionada ${l.data}`}
+          · <span class="pill ${getStatusInfo(l).pill}" style="font-size:8px;padding:1px 5px;">${getStatusInfo(l).label}</span>
+        </div>
+      </div>
+      <div class="farm-rev">
+        <div class="farm-rev-val" style="color:${parseFloat(l.receita || 0) > 0 ? 'var(--gr)' : 'var(--t3)'}">$${l.receita || '0.00'}</div>
+        <div class="farm-rev-orders">${l.vendas || 0} pedido(s)${l.lastOrder ? `<br><span style="font-size:8px;color:var(--ac)">último: ${l.lastOrder}</span>` : (l.checkedAt ? ` · ${l.checkedAt}` : '')}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn btn-sm" onclick="checkUma(${i});setTimeout(renderAll,800)" title="Verificar vendas">↻</button>
+        <button class="btn btn-sm" onclick="window.open('https://${l.url}','_blank')" title="Abrir loja">↗</button>
+        <button class="btn btn-sm btn-danger" onclick="excluirLoja(${i})" title="Excluir loja">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderLojas() {
+  const el = document.getElementById('lojas-list');
+  if (!el) return;
+  if (!lojas.length) { el.innerHTML = '<div class="empty">nenhuma loja criada ainda</div>'; return; }
+  el.innerHTML = `<table class="tbl">
+    <thead><tr><th>Loja</th><th>Marca</th><th>Status</th><th>Receita</th><th>Ações</th></tr></thead>
+    <tbody>${lojas.map((l, i) => `<tr>
+      <td>
+        <div style="font-family:var(--mono);font-size:11px;max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.url}</div>
+        <div style="font-size:9px;color:var(--t3);margin-top:2px;">${l.nicho_label || l.nicho}</div>
+        ${l.shopCreatedAt ? `<div style="font-size:9px;color:var(--ac);margin-top:1px;">criada em ${l.shopCreatedAt}</div>` : `<div style="font-size:9px;color:var(--t3);">adicionada ${l.data}</div>`}
+      </td>
+      <td style="font-size:12px;">${l.shopName || l.marca || '—'}</td>
+      <td><span class="pill ${getStatusInfo(l).pill}">${getStatusInfo(l).label}</span></td>
+      <td>
+        <div style="font-family:var(--mono);font-size:12px;color:${parseFloat(l.receita || 0) > 0 ? 'var(--gr)' : 'var(--t3)'}">$${l.receita || '0.00'}</div>
+        <div style="font-size:9px;color:var(--t3)">${l.vendas || 0} pedido(s)${l.lastOrder ? ` · último: ${l.lastOrder}` : (l.checkedAt ? ` · ${l.checkedAt}` : '')}</div>
+      </td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="window.open('https://${l.url}','_blank')" title="Ver loja">👁</button>
+          <button class="btn btn-sm" onclick="checkUma(${i})" title="Verificar vendas">↻</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirLoja(${i})" title="Excluir">✕</button>
+        </div>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderRanking() {
+  const el = document.getElementById('ranking-list');
+  if (!el) return;
+  if (!lojas.length) { el.innerHTML = '<div class="empty">nenhuma loja ainda</div>'; return; }
+  const sorted = [...lojas].map(l => ({ ...l, _r: parseFloat(l.receita || 0), _v: l.vendas || 0 })).sort((a, b) => b._r - a._r || b._v - a._v);
+  const maxR = sorted[0]?._r || 1;
+  const medals = ['🥇', '🥈', '🥉'];
+  const colors = ['#C9A84C', '#aaa', '#cd7f32', '#4a9eff', '#4caf50'];
+  const totalR = sorted.reduce((s, l) => s + l._r, 0);
+  const totalV = sorted.reduce((s, l) => s + l._v, 0);
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem;">
+      <div class="farm-stat-card"><span class="farm-stat-val" style="color:var(--ac)">$${totalR.toFixed(2)}</span><span class="farm-stat-lbl">Receita Total</span></div>
+      <div class="farm-stat-card"><span class="farm-stat-val" style="color:var(--gr)">${totalV}</span><span class="farm-stat-lbl">Pedidos Totais</span></div>
+      <div class="farm-stat-card"><span class="farm-stat-val" style="color:var(--bl)">${sorted.filter(l => l._v > 0).length}/${sorted.length}</span><span class="farm-stat-lbl">Com Vendas</span></div>
+    </div>
+    ${sorted.map((l, i) => {
+      const pct = Math.max(4, (l._r / maxR) * 100).toFixed(1);
+      return `<div class="rank-item">
+        <div class="rank-pos" style="color:${colors[i % colors.length]}">${medals[i] || '#' + (i + 1)}</div>
+        <div class="rank-bar-wrap">
+          <div class="rank-url">${l.url}${l.marca ? ` <span style="font-size:9px;color:var(--t3);font-family:var(--mono)">· ${l.marca}</span>` : ''}</div>
+          <div class="rank-meta">${l.nicho_label || l.nicho}${l.shopCreatedAt ? ` · criada em ${l.shopCreatedAt}` : ` · adicionada ${l.data}`}</div>
+          <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${colors[i % colors.length]}"></div></div>
+          <div class="rank-vals">
+            <span class="rank-val" style="color:${l._r > 0 ? 'var(--gr)' : 'var(--t3)'}">$${l._r.toFixed(2)}</span>
+            <span class="rank-val" style="color:var(--t3)">${l._v} pedidos</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm" onclick="checkUma(${lojas.indexOf(l)});setTimeout(renderAll,800)" title="Verificar">↻</button>
+          <button class="btn btn-sm btn-danger" onclick="excluirLoja(${lojas.indexOf(l)})" title="Excluir">✕</button>
+        </div>
+      </div>`;
+    }).join('')}`;
+}
+
+async function excluirLoja(idx) {
+  const loja = lojas[idx];
+  if (!loja) return;
+  if (!confirm(`Excluir "${loja.url}" do dashboard?\n\nIsso remove a loja do monitoramento mas NÃO afeta a loja na Shopify.`)) return;
+
+  // Remove da lista
+  lojas.splice(idx, 1);
+  localStorage.setItem('dg_v10', JSON.stringify(lojas));
+
+  // Remove do KV
+  try {
+    await fetch(WORKER, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deletar_loja', url: loja.url })
+    });
+  } catch(e) {}
+
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════
+// TOKEN OAUTH
+// ══════════════════════════════════════════════════════
+function oauthStart() {
+  const url = document.getElementById('tk-url').value.trim();
+  const id = document.getElementById('tk-id').value.trim();
+  if (!url || !id) { alert('Preencha URL e Client ID.'); return; }
+  const scopes = 'read_all_orders,read_analytics,read_app_proxy,write_app_proxy,read_apps,read_assigned_fulfillment_orders,write_assigned_fulfillment_orders,read_audit_events,read_customer_events,read_cart_transforms,write_cart_transforms,read_all_cart_transforms,read_validations,write_validations,read_cash_tracking,write_cash_tracking,read_channels,write_channels,read_checkout_branding_settings,write_checkout_branding_settings,write_checkouts,read_checkouts,read_companies,write_companies,read_custom_fulfillment_services,write_custom_fulfillment_services,read_custom_pixels,write_custom_pixels,read_customers,write_customers,read_customer_data_erasure,write_customer_data_erasure,read_customer_payment_methods,read_customer_merge,write_customer_merge,read_delivery_customizations,write_delivery_customizations,read_price_rules,write_price_rules,read_discounts,write_discounts,read_discounts_allocator_functions,write_discounts_allocator_functions,read_discovery,write_discovery,write_draft_orders,read_draft_orders,read_files,write_files,read_fulfillment_constraint_rules,write_fulfillment_constraint_rules,read_fulfillments,write_fulfillments,read_gift_card_transactions,write_gift_card_transactions,read_gift_cards,write_gift_cards,write_inventory,read_inventory,write_inventory_shipments,read_inventory_shipments,write_inventory_shipments_received_items,read_inventory_shipments_received_items,write_inventory_transfers,read_inventory_transfers,read_legal_policies,write_legal_policies,read_delivery_option_generators,write_delivery_option_generators,read_locales,write_locales,write_locations,read_locations,read_marketing_integrated_campaigns,write_marketing_integrated_campaigns,write_marketing_events,read_marketing_events,read_markets,write_markets,read_markets_home,write_markets_home,read_merchant_managed_fulfillment_orders,write_merchant_managed_fulfillment_orders,read_metaobject_definitions,write_metaobject_definitions,read_metaobjects,write_metaobjects,read_online_store_navigation,write_online_store_navigation,read_online_store_pages,write_online_store_pages,write_order_edits,read_order_edits,read_orders,write_orders,write_packing_slip_templates,read_packing_slip_templates,write_payment_mandate,read_payment_mandate,read_payment_terms,write_payment_terms,read_payment_customizations,write_payment_customizations,read_privacy_settings,write_privacy_settings,read_product_feeds,write_product_feeds,read_product_listings,write_product_listings,read_products,write_products,read_publications,write_publications,read_purchase_options,write_purchase_options,write_reports,read_reports,read_resource_feedbacks,write_resource_feedbacks,read_returns,write_returns,read_script_tags,write_script_tags,read_shopify_payments_provider_accounts_sensitive,read_shipping,write_shipping,read_shopify_payments_accounts,read_shopify_payments_payouts,read_shopify_payments_bank_accounts,read_shopify_payments_disputes,write_shopify_payments_disputes,read_content,write_content,read_store_credit_account_transactions,write_store_credit_account_transactions,read_store_credit_accounts,write_own_subscription_contracts,read_own_subscription_contracts,write_theme_code,read_themes,write_themes,read_third_party_fulfillment_orders,write_third_party_fulfillment_orders,read_translations,write_translations,read_pixels,write_pixels';
+  window.open(`https://${url.replace(/\/$/, '')}/admin/oauth/authorize?client_id=${id}&scope=${scopes}&redirect_uri=https://example.com&response_type=code`, '_blank');
+  document.getElementById('tk-step2').style.display = 'block';
+}
+
+async function oauthFinish() {
+  const url = document.getElementById('tk-url').value.trim();
+  const id = document.getElementById('tk-id').value.trim();
+  const secret = document.getElementById('tk-secret').value.trim();
+  let code = document.getElementById('tk-code').value.trim();
+  if (code.includes('code=')) code = code.split('code=')[1].split('&')[0];
+  if (!code) { alert('Cole o código OAuth.'); return; }
+  document.getElementById('tk-err').style.display = 'none';
+  try {
+    const r = await fetch(TOKEN_WORKER, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store_url: url, client_id: id, client_secret: secret, code })
+    });
+    const d = await r.json();
+    if (!d.access_token) throw new Error(d.error || 'Token não retornado');
+    document.getElementById('tk-val').textContent = d.access_token;
+    document.getElementById('tk-result').style.display = 'block';
+    document.getElementById('tk-step2').style.display = 'none';
+  } catch(e) {
+    document.getElementById('tk-err').style.display = 'block';
+    document.getElementById('tk-err').textContent = 'Erro: ' + e.message;
+  }
+}
+
+function usarToken() {
+  const token = document.getElementById('tk-val').textContent;
+  const url = document.getElementById('tk-url').value.trim();
+  document.getElementById('c-token').value = token;
+  document.getElementById('c-url').value = url;
+  localStorage.setItem('dg_token', token);
+  localStorage.setItem('dg_url', url);
+  nav('criar', document.querySelector('.sb-item'));
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+window.addEventListener('load', async () => {
+  // 1. Mostrar dados locais IMEDIATAMENTE (sem esperar KV)
+  lojas = JSON.parse(localStorage.getItem('dg_v10') || '[]');
+  renderAll();
+
+  // 2. Restaurar campos salvos
+  const fields = [['c-url','dg_url'],['c-token','dg_token'],['c-claude','dg_claude']];
+  fields.forEach(([id, key]) => {
+    const val = localStorage.getItem(key);
+    if (val) { const el = document.getElementById(id); if (el) el.value = val; }
+  });
+
+  // 3. Badge Claude API
+  const badge = document.getElementById('ai-status-badge');
+  if (badge) {
+    const key = localStorage.getItem('dg_claude');
+    badge.textContent = key ? '★ Claude IA: ativa' : 'Claude IA: sem chave';
+    badge.className = 'pill ' + (key ? 'pill-ok' : 'pill-warn');
+  }
+
+  // 4. Render produtos
+  renderProdutos();
+
+  // 5. Inicializar mobile (mostra farm por padrão)
+  initMobile();
+
+  // 6. Sincronizar com KV em background (atualiza se tiver mais dados)
+  syncKV();
+
+  // 6. Auto-verificar vendas a cada 5 minutos
+  setInterval(checkAll, 5 * 60 * 1000);
+});
+</script>
+</body>
+</html>
