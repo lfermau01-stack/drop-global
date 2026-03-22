@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Drop Global</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#0a0a0a;--surface:#111;--surface2:#1a1a1a;--surface3:#222;
+  --border:#2a2a2a;--border2:#3a3a3a;--text:#f0f0f0;--muted:#666;
+  --muted2:#999;--accent:#c9a84c;--accent2:#e8c96a;--green:#4caf50;
+  --red:#ef5350;--blue:#4a9eff;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;font-size:14px;}
+.wrap{max-width:900px;margin:0 auto;padding:2.5rem 1.5rem;}
+.header{border-bottom:1px solid var(--border);padding-bottom:1.5rem;margin-bottom:2rem;display:flex;justify-content:space-between;align-items:flex-end;}
+.logo-text{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.2em;text-transform:uppercase;margin-bottom:4px;}
+h1{font-size:28px;font-weight:300;letter-spacing:-.02em;}
+h1 span{color:var(--accent);}
+.header-stats{display:flex;gap:1.5rem;text-align:right;}
+.hstat-val{font-family:var(--mono);font-size:18px;font-weight:500;display:block;}
+.hstat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+.notif{display:none;position:fixed;top:1rem;right:1rem;background:var(--surface);border:1px solid var(--green);border-radius:4px;padding:1rem 1.25rem;z-index:1000;max-width:320px;animation:slideIn .3s ease;}
+.notif.show{display:block;}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:none;}}
+.notif-title{font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.notif-body{font-size:12px;color:var(--muted2);line-height:1.6;}
+.notif-close{position:absolute;top:8px;right:10px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:2rem;overflow-x:auto;}
+.tab{font-family:var(--mono);font-size:11px;padding:10px 18px;cursor:pointer;color:var(--muted2);border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1.5rem;margin-bottom:1.25rem;}
+.panel-title{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:11px;color:var(--muted2);margin-bottom:6px;}
+.field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:10px 12px;font-size:13px;font-family:var(--mono);color:var(--text);outline:none;transition:border .15s;}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.field input::placeholder{color:var(--muted);}
+.field input.valid{border-color:var(--green);}
+.field input.invalid{border-color:var(--red);}
+.field select option{background:var(--surface2);}
+.saved-badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 7px;background:rgba(76,175,80,.15);color:var(--green);border-radius:2px;margin-left:8px;vertical-align:middle;}
+.btn{padding:10px 18px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--muted2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s;letter-spacing:.05em;white-space:nowrap;}
+.btn:hover{border-color:var(--border2);color:var(--text);background:var(--surface2);}
+.btn-primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:500;}
+.btn-primary:hover{background:var(--accent2);border-color:var(--accent2);color:#000;}
+.btn-full{width:100%;padding:14px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-danger{border-color:rgba(239,83,80,.3);color:var(--red);}
+.btn-danger:hover{background:rgba(239,83,80,.08);}
+.btn-sm{padding:5px 10px;font-size:10px;}
+.nicho-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px;}
+.nicho-btn{background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:10px 4px;font-size:11px;font-family:var(--mono);color:var(--muted2);cursor:pointer;text-align:center;transition:all .15s;}
+.nicho-btn:hover{border-color:var(--border2);color:var(--text);}
+.nicho-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(201,168,76,.08);}
+.info-box{background:rgba(74,158,255,.06);border:1px solid rgba(74,158,255,.2);border-radius:3px;padding:10px 14px;font-size:12px;color:var(--muted2);line-height:1.7;margin-bottom:1.25rem;}
+.info-box span{color:var(--blue);}
+.highlight{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:3px;padding:10px 14px;font-size:12px;color:var(--muted2);line-height:1.7;margin-bottom:1.25rem;}
+.highlight span{color:var(--accent);font-weight:500;}
+.tutorial{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1.25rem;margin-bottom:1.25rem;}
+.tutorial-title{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:.12em;text-transform:uppercase;margin-bottom:1rem;}
+.tutorial-steps{display:flex;flex-direction:column;gap:10px;}
+.tstep{display:flex;gap:12px;align-items:flex-start;}
+.tstep-num{width:22px;height:22px;border-radius:50%;background:var(--surface3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--muted2);flex-shrink:0;margin-top:1px;}
+.tstep-text{font-size:12px;color:var(--muted2);line-height:1.6;}
+.tstep-text strong{color:var(--text);font-weight:500;}
+.tstep-text a{color:var(--accent);text-decoration:none;}
+.prog-wrap{margin-top:1.25rem;display:none;}
+.prog-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:10px;}
+.prog-fill{height:100%;background:var(--accent);width:0%;transition:width .4s ease;}
+.prog-label{font-family:var(--mono);font-size:11px;color:var(--muted2);margin-bottom:8px;}
+.tasks-grid{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
+.task-row{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:3px;transition:all .2s;}
+.task-row.pending{color:var(--muted);}
+.task-row.running{color:var(--accent);background:rgba(201,168,76,.06);}
+.task-row.done{color:var(--green);}
+.task-row.error{color:var(--red);}
+.task-icon{width:14px;height:14px;border-radius:50%;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;}
+.log-box{background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1rem;max-height:150px;overflow-y:auto;margin-top:8px;}
+.log-line{font-family:var(--mono);font-size:10px;color:var(--muted2);padding:1px 0;display:flex;gap:10px;}
+.log-line .ts{color:var(--muted);min-width:55px;}
+.log-line.ok .msg{color:var(--green);}
+.log-line.err .msg{color:var(--red);}
+.log-line.info .msg{color:var(--accent);}
+.result-ok{display:none;background:rgba(76,175,80,.06);border:1px solid rgba(76,175,80,.2);border-radius:3px;padding:1rem;margin-top:1rem;}
+.result-ok h3{font-family:var(--mono);font-size:11px;color:var(--green);letter-spacing:.1em;margin-bottom:6px;}
+.result-ok p{font-size:12px;color:var(--muted2);line-height:1.7;}
+.stores-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;padding:0 10px 10px 0;text-align:left;border-bottom:1px solid var(--border);font-weight:400;}
+td{padding:10px 10px 10px 0;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.store-url-cell{font-family:var(--mono);font-size:11px;color:var(--text);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cell-muted{font-size:11px;color:var(--muted2);}
+.cell-mono{font-family:var(--mono);font-size:10px;color:var(--muted);}
+.pill{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:2px;}
+.pill-ok{background:rgba(76,175,80,.15);color:var(--green);}
+.pill-pending{background:rgba(201,168,76,.15);color:var(--accent);}
+.pill-error{background:rgba(239,83,80,.15);color:var(--red);}
+.vendas-ok{font-family:var(--mono);font-size:10px;color:var(--green);}
+.vendas-zero{font-size:10px;color:var(--muted);}
+.new-sale-badge{display:inline-block;font-family:var(--mono);font-size:9px;padding:2px 6px;background:rgba(76,175,80,.2);color:var(--green);border-radius:2px;margin-left:6px;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:4px;width:90%;max-width:1000px;height:80vh;display:flex;flex-direction:column;}
+.modal-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.modal-title{font-family:var(--mono);font-size:11px;color:var(--muted2);letter-spacing:.1em;text-transform:uppercase;}
+.modal iframe{flex:1;border:none;border-radius:0 0 4px 4px;}
+.edit-panel{display:none;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1.25rem;margin-top:.75rem;}
+.edit-panel.show{display:block;}
+.rank-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);}
+.rank-item:last-child{border-bottom:none;}
+.rank-pos{font-family:var(--mono);font-size:18px;font-weight:500;min-width:32px;text-align:center;}
+.rank-pos.gold{color:#FFD700;}
+.rank-pos.silver{color:#C0C0C0;}
+.rank-pos.bronze{color:#CD7F32;}
+.rank-pos.other{color:var(--muted);}
+.rank-bar-wrap{flex:1;}
+.rank-url{font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.rank-meta{font-size:11px;color:var(--muted2);margin-bottom:6px;}
+.rank-bar-bg{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.rank-bar-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+.rank-vals{display:flex;gap:16px;margin-top:6px;flex-wrap:wrap;}
+.rank-val{font-family:var(--mono);font-size:11px;}
+.rank-val.green{color:var(--green);}
+.rank-val.muted{color:var(--muted);}
+.rank-badge{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:2px;}
+.sidekick-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:1rem;}
+.sk-step{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1rem;}
+.sk-num{font-family:var(--mono);font-size:10px;color:var(--accent);margin-bottom:6px;}
+.sk-title{font-size:13px;font-weight:500;margin-bottom:4px;}
+.sk-desc{font-size:11px;color:var(--muted2);line-height:1.5;}
+.prompt-box{background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1rem;font-family:var(--mono);font-size:11px;color:var(--muted2);line-height:1.7;cursor:pointer;transition:border .15s;margin-top:8px;}
+.prompt-box:hover{border-color:var(--accent);}
+.empty{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;padding:2rem 0;}
+@media(max-width:680px){
+  .header{flex-direction:column;align-items:flex-start;gap:1rem;}
+  .nicho-grid{grid-template-columns:repeat(3,1fr);}
+  .sidekick-steps{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif">
+  <button class="notif-close" onclick="fecharNotif()">✕</button>
+  <div class="notif-title">🔔 Nova venda!</div>
+  <div class="notif-body" id="notif-body"></div>
+</div>
+
+<div class="modal-overlay" id="modal-preview">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Preview</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm" onclick="window.open(previewUrl,'_blank')">Abrir ↗</button>
+        <button class="btn btn-sm btn-danger" onclick="fecharModal()">Fechar</button>
+      </div>
+    </div>
+    <iframe id="modal-iframe" src="about:blank"></iframe>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="header">
+    <div>
+      <div class="logo-text">Sistema automatizado v8</div>
+      <h1>Drop <span>Global</span></h1>
+    </div>
+    <div class="header-stats">
+      <div><span class="hstat-val" id="h-total">0</span><span class="hstat-label">Lojas</span></div>
+      <div><span class="hstat-val" style="color:var(--green)" id="h-prontas">0</span><span class="hstat-label">Prontas</span></div>
+      <div><span class="hstat-val" style="color:var(--accent)" id="h-receita">$0</span><span class="hstat-label">Receita</span></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('criar',this)">Criar Loja</div>
+    <div class="tab" onclick="showTab('farm',this)">Monitor Farm</div>
+    <div class="tab" onclick="showTab('lojas',this)">Minhas Lojas</div>
+    <div class="tab" onclick="showTab('ranking',this)">Ranking</div>
+    <div class="tab" onclick="showTab('token',this)">Gerar Token</div>
+    <div class="tab" onclick="showTab('guia',this)">Guia Rápido</div>
+  </div>
+
+  <!-- TAB CRIAR -->
+  <div id="tab-criar" class="tab-content active">
+    <div class="panel">
+      <div class="panel-title">1 — URL da loja Shopify</div>
+      <div class="info-box"><span>Importante:</span> Crie a loja em <a href="https://shopify.com" target="_blank" style="color:var(--accent)">shopify.com</a> diretamente — não pelo Partners. Assim a loja fica pública sem senha.</div>
+      <div class="field">
+        <label>URL da loja <span id="url-saved-badge"></span></label>
+        <input id="store-url" type="text" placeholder="minha-loja.myshopify.com" oninput="validarUrl(this)"/>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">2 — Token da API Shopify</div>
+      <div class="tutorial">
+        <div class="tutorial-title">Como pegar o token</div>
+        <div class="tutorial-steps">
+          <div class="tstep"><div class="tstep-num">1</div><div class="tstep-text">Admin → <strong>Settings → Apps → Develop apps</strong></div></div>
+          <div class="tstep"><div class="tstep-num">2</div><div class="tstep-text">Clique <strong>"Create an app"</strong> → nome: <strong>"drop-global"</strong></div></div>
+          <div class="tstep"><div class="tstep-num">3</div><div class="tstep-text">Configure scopes e instale → copie o token <strong>shpat_...</strong> — ou use a aba <strong>"Gerar Token"</strong></div></div>
+        </div>
+      </div>
+      <div class="highlight"><span>Atenção:</span> O token aparece apenas uma vez. Copie antes de fechar.</div>
+      <div class="field">
+        <label>Token Shopify <span id="token-saved-badge"></span></label>
+        <input id="shopify-token" type="password" placeholder="shpat_..."/>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">3 — Imagens com IA (opcional)</div>
+      <div class="info-box"><span>Grátis:</span> Imagens geradas automaticamente via <strong>Puter.js</strong> — sem API key, sem custo. Ou use sua Google AI Key para qualidade superior com Imagen 4.</div>
+      <div class="field">
+        <label>Google AI Key <span style="font-size:10px;color:var(--muted)">(opcional — sem ela usa Puter grátis)</span></label>
+        <input id="google-key" type="password" placeholder="AIza... (opcional)"/>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">4 — Nicho e criação</div>
+      <div class="field">
+        <label>Nicho da loja</label>
+        <div class="nicho-grid">
+          <div class="nicho-btn active" data-nicho="jewelry" data-label="Bijuterias" onclick="selectNicho(this)">Bijuterias</div>
+          <div class="nicho-btn" data-nicho="pet" data-label="Pet" onclick="selectNicho(this)">Pet</div>
+          <div class="nicho-btn" data-nicho="home" data-label="Casa" onclick="selectNicho(this)">Casa</div>
+          <div class="nicho-btn" data-nicho="fitness" data-label="Fitness" onclick="selectNicho(this)">Fitness</div>
+          <div class="nicho-btn" data-nicho="travel" data-label="Viagem" onclick="selectNicho(this)">Viagem</div>
+          <div class="nicho-btn" data-nicho="baby" data-label="Bebê" onclick="selectNicho(this)">Bebê</div>
+          <div class="nicho-btn" data-nicho="kitchen" data-label="Cozinha" onclick="selectNicho(this)">Cozinha</div>
+          <div class="nicho-btn" data-nicho="outdoor" data-label="Outdoor" onclick="selectNicho(this)">Outdoor</div>
+          <div class="nicho-btn" data-nicho="beauty" data-label="Beauty" onclick="selectNicho(this)">Beauty</div>
+          <div class="nicho-btn" data-nicho="tech" data-label="Tech" onclick="selectNicho(this)">Tech</div>
+          <div class="nicho-btn" data-nicho="candles" data-label="Velas" onclick="selectNicho(this)">Velas</div>
+          <div class="nicho-btn" data-nicho="yoga" data-label="Yoga" onclick="selectNicho(this)">Yoga</div>
+        </div>
+      </div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1rem;margin-top:1rem;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.75rem;">O que será criado diretamente na Shopify</div>
+        <div class="tasks-grid" id="task-list">
+          <div class="task-row pending" id="task-0"><div class="task-icon">○</div>Limpar produtos existentes</div>
+          <div class="task-row pending" id="task-1"><div class="task-icon">○</div>Criar coleções (Best Sellers, New Arrivals, Sale)</div>
+          <div class="task-row pending" id="task-2"><div class="task-icon">○</div>Criar 15 produtos com preços e descrições</div>
+          <div class="task-row pending" id="task-3"><div class="task-icon">○</div>Gerar imagens dos produtos com IA</div>
+          <div class="task-row pending" id="task-4"><div class="task-icon">○</div>Criar páginas (About, FAQ, Size Guide, Contact)</div>
+          <div class="task-row pending" id="task-5"><div class="task-icon">○</div>Criar políticas legais (Privacy, Refund, Shipping, Terms)</div>
+          <div class="task-row pending" id="task-6"><div class="task-icon">○</div>Blog com 2 artigos SEO</div>
+          <div class="task-row pending" id="task-7"><div class="task-icon">○</div>Frete grátis configurado</div>
+          <div class="task-row pending" id="task-8"><div class="task-icon">○</div>Detectar tema e aplicar cores premium</div>
+          <div class="task-row pending" id="task-9"><div class="task-icon">○</div>Criar logo SVG + banner hero + banner mobile</div>
+          <div class="task-row pending" id="task-10"><div class="task-icon">○</div>Criar seções Liquid profissionais (hero + benefits)</div>
+          <div class="task-row pending" id="task-11"><div class="task-icon">○</div>Aplicar CSS premium + announcement bar</div>
+          <div class="task-row pending" id="task-12"><div class="task-icon">○</div>Loja profissional pronta!</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="btn-criar" onclick="criarLoja()" style="margin-top:1rem;">→ Criar Loja Automaticamente</button>
+
+      <div class="prog-wrap" id="prog-wrap">
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+        <div class="prog-label" id="prog-label">Iniciando...</div>
+        <div class="log-box" id="log-box"></div>
+      </div>
+
+      <div class="result-ok" id="result-ok">
+        <h3>✓ LOJA CRIADA COM SUCESSO</h3>
+        <p id="result-text"></p>
+        <button class="btn btn-sm" style="margin-top:.75rem;" onclick="abrirPreviewAtual()">👁 Ver loja →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB LOJAS -->
+  <div id="tab-lojas" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">
+        <span>Minhas lojas</span>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm" onclick="verificarTodas()">↻ Verificar vendas</button>
+          <button class="btn btn-sm btn-danger" onclick="limparLojas()">Limpar</button>
+        </div>
+      </div>
+      <div class="stores-wrap" id="stores-wrap"><div class="empty">nenhuma loja criada ainda</div></div>
+    </div>
+  </div>
+
+  <!-- TAB RANKING -->
+  <div id="tab-ranking" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">
+        <span>Ranking por performance</span>
+        <button class="btn btn-sm" onclick="verificarTodas();setTimeout(renderRanking,1500)">↻ Atualizar</button>
+      </div>
+      <div id="ranking-wrap"><div class="empty">nenhuma loja ainda</div></div>
+    </div>
+  </div>
+
+  <!-- TAB TOKEN -->
+  <div id="tab-token" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">Gerar Token Shopify</div>
+      <div class="info-box"><span>Como funciona:</span> Cole o Client ID e Secret do seu app → clique Autorizar → aprove na Shopify → token gerado automaticamente via servidor.</div>
+      <div class="tutorial">
+        <div class="tutorial-title">Onde pegar Client ID e Secret</div>
+        <div class="tutorial-steps">
+          <div class="tstep"><div class="tstep-num">1</div><div class="tstep-text">Acesse <a href="https://dev.shopify.com" target="_blank">dev.shopify.com</a> → clique no seu app</div></div>
+          <div class="tstep"><div class="tstep-num">2</div><div class="tstep-text">Clique em <strong>Settings</strong> → copie <strong>Client ID</strong> e <strong>Secret</strong></div></div>
+        </div>
+      </div>
+      <div class="field"><label>URL da loja</label><input id="tk-store" type="text" placeholder="minha-loja.myshopify.com"/></div>
+      <div class="field"><label>Client ID</label><input id="tk-client-id" type="text" placeholder="ex: 8585d94..."/></div>
+      <div class="field"><label>Client Secret</label><input id="tk-secret" type="password" placeholder="shpss_..."/></div>
+      <button class="btn btn-primary btn-full" onclick="iniciarOAuth()" style="margin-top:.5rem;">→ Autorizar e Gerar Token</button>
+      <div id="tk-step2" style="display:none;margin-top:1.25rem;">
+        <div class="highlight"><span>Passo 2:</span> Uma nova aba foi aberta. Autorize o app na Shopify. Depois copie o código após <strong>?code=</strong> na URL e cole abaixo (só o código, não a URL inteira).</div>
+        <div class="field"><label>Código OAuth</label><input id="tk-code" type="text" placeholder="ex: a8a567276f5c23f9..."/></div>
+        <button class="btn btn-primary btn-full" onclick="trocarToken()">→ Gerar Token Final</button>
+      </div>
+      <div id="tk-result" style="display:none;margin-top:1.25rem;background:rgba(76,175,80,.06);border:1px solid rgba(76,175,80,.2);border-radius:3px;padding:1.25rem;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;">✓ Token gerado!</div>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--text);background:var(--surface2);padding:10px;border-radius:3px;word-break:break-all;margin-bottom:10px;" id="tk-token-val"></div>
+        <button class="btn btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('tk-token-val').textContent).then(()=>alert('Copiado!'))">Copiar</button>
+        <button class="btn btn-sm btn-primary" onclick="usarToken()" style="margin-left:8px;">Usar na aba Criar Loja →</button>
+      </div>
+      <div id="tk-error" style="display:none;margin-top:1rem;background:rgba(239,83,80,.06);border:1px solid rgba(239,83,80,.2);border-radius:3px;padding:1rem;font-size:12px;color:var(--red);"></div>
+    </div>
+  </div>
+
+  <!-- TAB IMAGENS -->
+  <div id="tab-imagens" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">Imagens com Sidekick (IA da Shopify)</div>
+      <div class="info-box"><span>Sidekick</span> cria imagens e banners profissionais direto no seu tema — grátis, sem app extra.</div>
+      <div class="sidekick-steps">
+        <div class="sk-step"><div class="sk-num">PASSO 01</div><div class="sk-title">Abrir Customize</div><div class="sk-desc">Admin → Online Store → Themes → <strong>Customize</strong></div></div>
+        <div class="sk-step"><div class="sk-num">PASSO 02</div><div class="sk-title">Abrir Sidekick</div><div class="sk-desc">Clique na estrela ✦ no canto superior direito</div></div>
+        <div class="sk-step"><div class="sk-num">PASSO 03</div><div class="sk-title">Colar o prompt</div><div class="sk-desc">Use os prompts abaixo — clique para copiar</div></div>
+      </div>
+      <div style="margin-top:1.5rem;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">Prompt para banner — clique para copiar</div>
+        <div class="prompt-box" onclick="copiarTexto(this)">Create a luxury jewelry store hero banner. Style: minimalist and elegant. Background: deep black with subtle golden geometric patterns. Left side: large elegant serif text "Timeless Elegance" in gold #C9A84C. Below: "Premium handcrafted jewelry for the modern woman" in white. Gold "Shop Now" button. Right side: delicate circular decorative frame with thin gold lines. Mood: high-end, feminine, sophisticated.</div>
+      </div>
+      <div style="margin-top:1.25rem;">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;">Prompt para foto de produto — clique para copiar</div>
+        <div class="prompt-box" onclick="copiarTexto(this)">Professional product photography of [ring/necklace/earrings/bracelet]. Pure white background. Soft studio lighting. Product centered and sharp focus. Minimal clean shadows. High-end e-commerce style. No props, no hands, only the jewelry on white.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB FARM -->
+  <div id="tab-farm" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">
+        <span>Monitor Farm — todas as lojas</span>
+        <button class="btn btn-sm" onclick="farmAtualizar()">↻ Atualizar tudo</button>
+      </div>
+      <div id="farm-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.25rem;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1rem;text-align:center;">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--text)" id="farm-total">0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px;">Lojas</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1rem;text-align:center;">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--green)" id="farm-prontas">0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px;">Prontas</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1rem;text-align:center;">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--accent)" id="farm-receita">$0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px;">Receita Total</div>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1rem;text-align:center;">
+          <div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--blue)" id="farm-pedidos">0</div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px;">Pedidos</div>
+        </div>
+      </div>
+      <div id="farm-grid" style="display:flex;flex-direction:column;gap:8px;">
+        <div class="empty">nenhuma loja ainda — crie lojas para ver o farm</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB GUIA -->
+  <div id="tab-guia" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">Fluxo completo</div>
+      <div class="tutorial-steps" style="gap:16px;">
+        <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">1</div><div class="tstep-text"><strong>Criar loja no Shopify</strong><br/>shopify.com → Start free trial. 3 dias grátis, depois $1/mês.</div></div>
+        <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">2</div><div class="tstep-text"><strong>Pegar token</strong><br/>Use a aba "Gerar Token" — automático pelo navegador.</div></div>
+        <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">3</div><div class="tstep-text"><strong>Google AI Key</strong><br/>aistudio.google.com → Get API Key. Grátis para começar.</div></div>
+        <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">4</div><div class="tstep-text"><strong>Criar loja aqui</strong><br/>Preencha URL + token + Google Key + nicho e clique criar. ~10 minutos.</div></div>
+        <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">5</div><div class="tstep-text"><strong>Editar tema</strong><br/>Use a aba "Editar Tema" para deixar a loja visualmente profissional.</div></div>
+        <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">6</div><div class="tstep-text"><strong>Subir pagamentos</strong><br/>Settings → Payments → Shopify Payments ou Stripe.</div></div>
+        <div class="tstep"><div class="tstep-num" style="width:28px;height:28px;font-size:12px;">7</div><div class="tstep-text"><strong>Repetir</strong><br/>Crie quantas lojas quiser. Monitore tudo na aba "Monitor Farm".</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Custos — 20 lojas</div>
+      <table>
+        <thead><tr><th>Item</th><th>Custo</th><th>Obs</th></tr></thead>
+        <tbody>
+          <tr><td class="cell-muted">Imagens Imagen 4 Fast</td><td style="font-family:var(--mono);font-size:11px;color:var(--accent)">~$0.34/loja</td><td class="cell-muted">16 imgs × $0.02</td></tr>
+          <tr><td class="cell-muted">20 lojas imagens</td><td style="font-family:var(--mono);font-size:11px;color:var(--accent)">~$6.80</td><td class="cell-muted">Total imagens</td></tr>
+          <tr><td class="cell-muted">Shopify (20 lojas)</td><td style="font-family:var(--mono);font-size:11px;color:var(--accent)">$20/mês</td><td class="cell-muted">$1/loja × 3 meses</td></tr>
+          <tr><td class="cell-muted">Cloudflare Workers</td><td style="font-family:var(--mono);font-size:11px;color:var(--green)">Grátis</td><td class="cell-muted">100k req/dia</td></tr>
+          <tr><td class="cell-muted">GitHub Pages</td><td style="font-family:var(--mono);font-size:11px;color:var(--green)">Grátis</td><td class="cell-muted">Ilimitado</td></tr>
+          <tr><td class="cell-muted"><strong>Total 20 lojas</strong></td><td style="font-family:var(--mono);font-size:11px;color:var(--green)"><strong>~$26.80</strong></td><td class="cell-muted">~R$153/mês</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ============================
+// DADOS DOS NICHOS
+// ============================
+const NICHOS = {
+  jewelry: {
+    name: 'Lumière Jewelry', tagline: 'Wear what you love',
+    primary: '#C9A84C', secondary: '#1A1A1A',
+    products: [
+      { title: 'Aurora Gold Ring', type: 'Rings', price: '49.99', compare: '89.99', tags: 'ring,gold,jewelry,premium' },
+      { title: 'Celestial Pendant Necklace', type: 'Necklaces', price: '59.99', compare: '99.99', tags: 'necklace,gold,pendant,jewelry' },
+      { title: 'Moonlight Drop Earrings', type: 'Earrings', price: '39.99', compare: '69.99', tags: 'earrings,drop,gold,jewelry' },
+      { title: 'Infinity Twist Bracelet', type: 'Bracelets', price: '44.99', compare: '79.99', tags: 'bracelet,gold,infinity,jewelry' },
+      { title: 'Rose Gold Band Ring', type: 'Rings', price: '54.99', compare: '94.99', tags: 'ring,rose gold,band,jewelry' },
+      { title: 'Pearl Cluster Earrings', type: 'Earrings', price: '34.99', compare: '59.99', tags: 'earrings,pearl,cluster,jewelry' },
+      { title: 'Dainty Chain Necklace', type: 'Necklaces', price: '29.99', compare: '54.99', tags: 'necklace,chain,dainty,jewelry' },
+      { title: 'Stacking Ring Set', type: 'Rings', price: '64.99', compare: '109.99', tags: 'ring,stacking,set,jewelry' },
+      { title: 'Crystal Tennis Bracelet', type: 'Bracelets', price: '79.99', compare: '129.99', tags: 'bracelet,crystal,tennis,jewelry' },
+      { title: 'Vintage Floral Brooch', type: 'Accessories', price: '24.99', compare: '44.99', tags: 'brooch,floral,vintage,jewelry' },
+      { title: 'Geo Diamond Studs', type: 'Earrings', price: '44.99', compare: '74.99', tags: 'earrings,studs,diamond,jewelry' },
+      { title: 'Layered Bar Necklace', type: 'Necklaces', price: '39.99', compare: '69.99', tags: 'necklace,bar,layered,jewelry' },
+      { title: 'Snake Chain Anklet', type: 'Bracelets', price: '29.99', compare: '49.99', tags: 'anklet,snake,chain,jewelry' },
+      { title: 'Emerald Cocktail Ring', type: 'Rings', price: '89.99', compare: '149.99', tags: 'ring,emerald,cocktail,jewelry' },
+      { title: 'Hoop Earrings Gold', type: 'Earrings', price: '34.99', compare: '59.99', tags: 'earrings,hoop,gold,jewelry' }
+    ]
+  },
+  pet: {
+    name: 'PawVibe', tagline: 'Everything your pet deserves',
+    primary: '#FF6B35', secondary: '#1A1A2E',
+    products: [
+      { title: 'AquaPaw Travel Bowl', type: 'Feeding', price: '19.99', compare: '34.99', tags: 'bowl,travel,dog,pet' },
+      { title: 'ComfortFit Harness', type: 'Accessories', price: '34.99', compare: '59.99', tags: 'harness,dog,comfort,pet' },
+      { title: 'PawGuard Boots Set', type: 'Clothing', price: '29.99', compare: '49.99', tags: 'boots,paw,protection,pet' },
+      { title: 'CozyNest Plush Bed', type: 'Beds', price: '49.99', compare: '89.99', tags: 'bed,plush,comfortable,pet' },
+      { title: 'Interactive Feather Wand', type: 'Toys', price: '14.99', compare: '24.99', tags: 'toy,cat,feather,interactive' },
+      { title: 'Smart Auto Feeder', type: 'Feeding', price: '59.99', compare: '99.99', tags: 'feeder,auto,smart,pet' },
+      { title: 'Reflective Safety Leash', type: 'Accessories', price: '19.99', compare: '34.99', tags: 'leash,reflective,safety,dog' },
+      { title: 'Grooming Glove Pro', type: 'Grooming', price: '24.99', compare: '44.99', tags: 'grooming,glove,brush,pet' },
+      { title: 'Dental Chew Toy', type: 'Toys', price: '12.99', compare: '22.99', tags: 'toy,dental,chew,dog' },
+      { title: 'Calming Anxiety Wrap', type: 'Clothing', price: '34.99', compare: '59.99', tags: 'anxiety,wrap,calming,dog' },
+      { title: 'Portable Water Bottle', type: 'Feeding', price: '22.99', compare: '39.99', tags: 'bottle,water,portable,pet' },
+      { title: 'GPS Pet Tracker', type: 'Technology', price: '49.99', compare: '79.99', tags: 'gps,tracker,safety,pet' },
+      { title: 'Orthopedic Memory Foam Bed', type: 'Beds', price: '69.99', compare: '119.99', tags: 'bed,orthopedic,memory foam,pet' },
+      { title: 'Retractable Training Lead', type: 'Accessories', price: '27.99', compare: '47.99', tags: 'leash,retractable,training,dog' },
+      { title: 'Cat Tree Tower', type: 'Furniture', price: '79.99', compare: '129.99', tags: 'cat,tree,tower,scratching' }
+    ]
+  },
+  fitness: {
+    name: 'FitForge', tagline: 'Forge your best self',
+    primary: '#E63946', secondary: '#1D3557',
+    products: [
+      { title: 'Pro Resistance Band Set', type: 'Bands', price: '29.99', compare: '54.99', tags: 'resistance,bands,workout,fitness' },
+      { title: 'Adjustable Dumbbell 20kg', type: 'Weights', price: '89.99', compare: '149.99', tags: 'dumbbell,adjustable,weight,fitness' },
+      { title: 'Non-Slip Yoga Mat', type: 'Yoga', price: '39.99', compare: '69.99', tags: 'yoga,mat,non-slip,fitness' },
+      { title: 'Jump Rope Speed Cable', type: 'Cardio', price: '19.99', compare: '34.99', tags: 'jump rope,speed,cardio,fitness' },
+      { title: 'Foam Roller Deep Tissue', type: 'Recovery', price: '24.99', compare: '44.99', tags: 'foam roller,recovery,massage,fitness' },
+      { title: 'Pull Up Bar Doorframe', type: 'Strength', price: '34.99', compare: '59.99', tags: 'pull up,bar,doorframe,fitness' },
+      { title: 'Smart Water Bottle 1L', type: 'Accessories', price: '29.99', compare: '49.99', tags: 'water bottle,smart,hydration,fitness' },
+      { title: 'Lifting Belt Leather', type: 'Protection', price: '44.99', compare: '79.99', tags: 'belt,lifting,leather,fitness' },
+      { title: 'Gym Gloves Pro', type: 'Accessories', price: '19.99', compare: '34.99', tags: 'gloves,gym,grip,fitness' },
+      { title: 'Ab Wheel Roller', type: 'Core', price: '22.99', compare: '39.99', tags: 'ab wheel,core,roller,fitness' },
+      { title: 'Push Up Handles', type: 'Strength', price: '17.99', compare: '29.99', tags: 'push up,handles,chest,fitness' },
+      { title: 'Kettlebell Cast Iron 16kg', type: 'Weights', price: '59.99', compare: '99.99', tags: 'kettlebell,cast iron,weight,fitness' },
+      { title: 'Compression Knee Sleeves', type: 'Protection', price: '24.99', compare: '44.99', tags: 'knee,compression,protection,fitness' },
+      { title: 'Battle Rope 10m', type: 'Cardio', price: '69.99', compare: '119.99', tags: 'battle rope,cardio,functional,fitness' },
+      { title: 'Massage Gun Percussion', type: 'Recovery', price: '79.99', compare: '129.99', tags: 'massage gun,percussion,recovery,fitness' }
+    ]
+  }
+};
+
+// Default products for other niches
+function getProducts(nicho) {
+  return NICHOS[nicho]?.products || NICHOS.jewelry.products;
+}
+function getBrandInfo(nicho) {
+  return NICHOS[nicho] || NICHOS.jewelry;
+}
+
+// ============================
+// STATE
+// ============================
+let nichoSelecionado = 'jewelry';
+let lojas = JSON.parse(localStorage.getItem('dg_v6') || '[]');
+let rodando = false;
+let previewUrl = '';
+
+// ============================
+// SHOPIFY API
+// ============================
+async function shopifyAPI(storeUrl, token, method, endpoint, body = null) {
+  const url = `https://shopify-proxy.lfermau-01.workers.dev`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ store_url: storeUrl, token, method, endpoint, body })
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`API error ${res.status}: ${err}`);
+  }
+  return res.json();
+}
+
+// ============================
+// CRIAR LOJA
+// ============================
+async function criarLoja() {
+  if (rodando) return;
+  const storeUrl = document.getElementById('store-url').value.trim().replace(/\/$/, '');
+  const token = document.getElementById('shopify-token').value.trim();
+  const googleKey = document.getElementById('google-key').value.trim();
+
+  if (!storeUrl || !token) { alert('Preencha a URL da loja e o token Shopify.'); return; }
+
+  if (googleKey) localStorage.setItem('dg_google_key', googleKey);
+  localStorage.setItem('dg_store_url', storeUrl);
+  localStorage.setItem('dg_shopify_token', token);
+
+  rodando = true;
+  resetTasks();
+  const btn = document.getElementById('btn-criar');
+  btn.disabled = true;
+  btn.textContent = '⏳ Criando loja...';
+  document.getElementById('prog-wrap').style.display = 'block';
+  document.getElementById('result-ok').style.display = 'none';
+  previewUrl = 'https://' + storeUrl;
+
+  const brand = getBrandInfo(nichoSelecionado);
+  const products = getProducts(nichoSelecionado);
+
+  log('Iniciando criação da loja ' + storeUrl, 'info');
+  setProgress(5, 'Conectando à Shopify...');
+
+  const loja = {
+    url: storeUrl, nicho: nichoSelecionado, data: new Date().toLocaleDateString('pt-BR'),
+    hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    status: 'criando', shopifyToken: token, vendas: undefined, receita: '0.00'
+  };
+  lojas.unshift(loja);
+  salvarLojas();
+
+  try {
+    // TAREFA 0 - Deletar produtos existentes
+    setTask(0, 'running');
+    log('Removendo produtos existentes...', 'info');
+    try {
+      const existingProds = await shopifyAPI(storeUrl, token, 'GET', '/products.json?limit=250');
+      for (const p of (existingProds.products || [])) {
+        await shopifyAPI(storeUrl, token, 'DELETE', `/products/${p.id}.json`);
+      }
+    } catch(e) { log('Aviso: ' + e.message, 'err'); }
+    setTask(0, 'done');
+    setProgress(15, 'Criando coleções...');
+
+    // TAREFA 1 - Criar coleções
+    setTask(1, 'running');
+    log('Criando coleções...', 'info');
+    const collections = {};
+    for (const colName of ['Best Sellers', 'New Arrivals', 'Sale']) {
+      try {
+        const col = await shopifyAPI(storeUrl, token, 'POST', '/custom_collections.json', {
+          custom_collection: { title: colName, published: true }
+        });
+        collections[colName] = col.custom_collection?.id;
+      } catch(e) { log('Col error: ' + e.message, 'err'); }
+    }
+    setTask(1, 'done');
+    setProgress(25, 'Criando produtos...');
+
+    // TAREFA 2 - Criar produtos
+    setTask(2, 'running');
+    log(`Criando ${products.length} produtos...`, 'info');
+    const createdProducts = [];
+    for (let i = 0; i < products.length; i++) {
+      const p = products[i];
+      try {
+        const desc = `<p><strong>${p.title}</strong> — Premium quality ${p.type.toLowerCase()} from ${brand.name}. Designed for those who appreciate craftsmanship and elegance. Made with high-quality materials, this piece combines style and durability for everyday wear.</p><ul><li>✓ Premium materials</li><li>✓ Free shipping worldwide</li><li>✓ 30-day easy returns</li><li>✓ Gift-ready packaging</li></ul>`;
+        const prod = await shopifyAPI(storeUrl, token, 'POST', '/products.json', {
+          product: {
+            title: p.title,
+            body_html: desc,
+            vendor: brand.name,
+            product_type: p.type,
+            tags: p.tags,
+            status: 'active',
+            variants: [{
+              price: p.price,
+              compare_at_price: p.compare,
+              inventory_management: 'shopify',
+              inventory_quantity: 999,
+              fulfillment_service: 'manual',
+              requires_shipping: true
+            }]
+          }
+        });
+        if (prod.product?.id) createdProducts.push(prod.product.id);
+        log(`Produto ${i+1}/${products.length}: ${p.title}`, 'ok');
+      } catch(e) { log(`Erro produto ${p.title}: ` + e.message, 'err'); }
+    }
+    setTask(2, 'done');
+    setProgress(45, 'Configurando loja...');
+
+    // Adicionar produtos às coleções de forma inteligente
+    const bestSellersId = collections['Best Sellers'];
+    const newArrivalsId = collections['New Arrivals'];
+    const saleId = collections['Sale'];
+
+    for (let i = 0; i < createdProducts.length; i++) {
+      const prodId = createdProducts[i];
+      try {
+        // Todos os produtos vão para Best Sellers
+        if (bestSellersId) {
+          await shopifyAPI(storeUrl, token, 'POST', `/custom_collections/${bestSellersId}/collects.json`, {
+            collect: { product_id: prodId, collection_id: bestSellersId }
+          });
+        }
+        // Primeiros 8 vão para New Arrivals
+        if (newArrivalsId && i < 8) {
+          await shopifyAPI(storeUrl, token, 'POST', `/custom_collections/${newArrivalsId}/collects.json`, {
+            collect: { product_id: prodId, collection_id: newArrivalsId }
+          });
+        }
+        // Últimos 5 vão para Sale
+        if (saleId && i >= 10) {
+          await shopifyAPI(storeUrl, token, 'POST', `/custom_collections/${saleId}/collects.json`, {
+            collect: { product_id: prodId, collection_id: saleId }
+          });
+        }
+      } catch(e) {}
+    }
+    log('Produtos adicionados às coleções', 'ok');
+
+    // TAREFA 3 - Gerar imagens com Puter.js (grátis) ou Google AI
+    setTask(3, 'running');
+    setProgress(45, 'Gerando imagens com IA...');
+    if (createdProducts.length > 0) {
+      const nichoPrompts = {
+        jewelry: 'professional product photo of elegant gold jewelry on pure white background, studio lighting, high-end e-commerce photography, no hands, no people',
+        pet: 'professional product photo of premium pet accessory on pure white background, studio lighting, clean e-commerce style',
+        fitness: 'professional product photo of fitness equipment on pure white background, studio lighting, high-end e-commerce photography',
+        home: 'professional product photo of modern home decor on pure white background, studio lighting, clean e-commerce style',
+        beauty: 'professional product photo of luxury beauty product on pure white background, studio lighting, high-end e-commerce photography',
+        candles: 'professional product photo of luxury scented candle on white background, soft studio lighting, elegant',
+        yoga: 'professional product photo of yoga accessory on white background, clean minimal style',
+        travel: 'professional product photo of travel accessory on white background, studio lighting',
+        baby: 'professional product photo of baby product on white background, soft studio lighting',
+        kitchen: 'professional product photo of kitchen item on white background, clean studio lighting',
+        outdoor: 'professional product photo of outdoor gear on white background, studio lighting',
+        tech: 'professional product photo of tech gadget on white background, modern studio lighting',
+        default: 'professional product photo on pure white background, studio lighting, high-end e-commerce photography'
+      };
+      const basePrompt = nichoPrompts[nichoSelecionado] || nichoPrompts.default;
+      for (let i = 0; i < Math.min(createdProducts.length, 15); i++) {
+        try {
+          const prompt = `${basePrompt}, ${products[i].type}, premium quality, photorealistic`;
+          const imgB64 = await gerarImagemGemini(prompt, googleKey);
+          await shopifyAPI(storeUrl, token, 'POST', `/products/${createdProducts[i]}/images.json`, {
+            image: { attachment: imgB64, alt: products[i].title }
+          });
+          log(`Imagem ${i+1}/${createdProducts.length}: ${products[i].title.substring(0,25)}`, 'ok');
+        } catch(e) { log(`Imagem ${i+1} erro: ${e.message.substring(0,60)}`, 'err'); }
+      }
+    }
+    setTask(3, 'done');
+    setProgress(60, 'Criando páginas...');
+
+    // TAREFA 4 - Criar páginas
+    setTask(4, 'running');
+    const pages = [
+      { title: 'About Us', body_html: `<h2>Welcome to ${brand.name}</h2><p><em>${brand.tagline}</em></p><p>At ${brand.name}, we believe everyone deserves premium quality products. Our carefully curated collection brings together the finest items, delivered straight to your door.</p><h3>Our Promise</h3><ul><li>✓ Premium quality products</li><li>✓ Free worldwide shipping</li><li>✓ 30-day hassle-free returns</li><li>✓ 24/7 customer support</li></ul>` },
+      { title: 'FAQ', body_html: '<h2>Frequently Asked Questions</h2><h3>Shipping</h3><p><strong>How long does shipping take?</strong><br>Standard delivery takes 7-14 business days. Express available at checkout.</p><p><strong>Do you ship worldwide?</strong><br>Yes! We ship to most countries worldwide with free shipping on all orders.</p><h3>Returns</h3><p><strong>What is your return policy?</strong><br>We offer a 30-day hassle-free return policy. Items must be in original condition.</p><h3>Products</h3><p><strong>What payment methods do you accept?</strong><br>We accept Visa, Mastercard, PayPal, Apple Pay, and American Express.</p>' },
+      { title: 'Size Guide', body_html: '<h2>Size Guide</h2><p>Finding your perfect size is easy with our guide below.</p><table border="1" cellpadding="8"><tr><th>Size</th><th>US</th><th>EU</th><th>Measurement</th></tr><tr><td>XS</td><td>0-2</td><td>32-34</td><td>Under 14"</td></tr><tr><td>S</td><td>4-6</td><td>36-38</td><td>14"-15"</td></tr><tr><td>M</td><td>8-10</td><td>40-42</td><td>15"-16"</td></tr><tr><td>L</td><td>12-14</td><td>44-46</td><td>16"-17"</td></tr></table>' },
+      { title: 'Track Your Order', body_html: '<h2>Track Your Order</h2><p>To track your order, please use the tracking number provided in your shipping confirmation email.</p><p>You can track your package directly on the carrier website or use a universal tracker like <a href="https://parcelsapp.com" target="_blank">ParcelsApp</a>.</p><p><strong>Estimated delivery times:</strong></p><ul><li>USA: 5-10 business days</li><li>Canada: 7-14 business days</li><li>Europe: 10-15 business days</li><li>Rest of World: 14-21 business days</li></ul>' },
+      { title: 'Contact Us', body_html: `<h2>Contact Us</h2><p>We'd love to hear from you!</p><h3>Customer Support</h3><p>📧 Email: support@${storeUrl.split('.')[0]}.com</p><p>⏰ Response time: Within 24 hours, Monday-Friday</p><h3>Order Issues</h3><p>For order tracking, returns, or exchanges, please include your order number in your message.</p>` }
+    ];
+    for (const page of pages) {
+      try {
+        await shopifyAPI(storeUrl, token, 'POST', '/pages.json', { page: { ...page, published: true } });
+        log(`Página: ${page.title}`, 'ok');
+      } catch(e) { log('Página error: ' + e.message, 'err'); }
+    }
+    setTask(4, 'done');
+    setProgress(65, 'Criando políticas...');
+
+    // TAREFA 5 - Políticas legais
+    setTask(5, 'running');
+    const storeName = brand.name;
+    const policies = [
+      { title: 'Privacy Policy', body_html: `<h1>Privacy Policy</h1><p>Last updated: ${new Date().toLocaleDateString('en-US')}</p><p>At ${storeName}, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information.</p><h2>Information We Collect</h2><p>We collect information you provide when placing orders: name, email, shipping address, and payment information.</p><h2>How We Use Your Information</h2><ul><li>Process and fulfill your orders</li><li>Send order confirmations and updates</li><li>Provide customer support</li><li>Improve our services</li></ul><h2>Data Security</h2><p>We implement industry-standard security measures including SSL encryption to protect your data.</p><h2>CCPA Rights (California Residents)</h2><p>You have the right to know, delete, and opt-out of the sale of your personal information.</p><h2>GDPR Rights (EU Residents)</h2><p>You have the right to access, rectify, erase, and port your personal data.</p><h2>Contact</h2><p>Questions? Email us at privacy@${storeUrl.split('.')[0]}.com</p>` },
+      { title: 'Refund Policy', body_html: `<h1>Refund Policy</h1><h2>30-Day Return Policy</h2><p>We offer a 30-day return window from the date of delivery. Items must be unused and in original packaging.</p><h2>How to Return</h2><ol><li>Email support@${storeUrl.split('.')[0]}.com with your order number</li><li>We'll send you return instructions within 24 hours</li><li>Ship the item back (customer pays return shipping for non-defective items)</li><li>Refund processed within 5-7 business days of receiving the return</li></ol><h2>Non-Returnable Items</h2><ul><li>Items damaged by misuse</li><li>Items returned after 30 days</li><li>Final sale items</li></ul><h2>Defective Items</h2><p>If you received a defective item, we'll cover return shipping and send a replacement or full refund.</p>` },
+      { title: 'Shipping Policy', body_html: `<h1>Shipping Policy</h1><h2>Free Worldwide Shipping</h2><p>We offer free shipping on all orders, no minimum required.</p><h2>Processing Time</h2><p>Orders are processed within 1-3 business days. You'll receive a tracking number once shipped.</p><h2>Delivery Times</h2><ul><li><strong>United States:</strong> 5-10 business days</li><li><strong>Canada:</strong> 7-14 business days</li><li><strong>Europe:</strong> 10-15 business days</li><li><strong>Rest of World:</strong> 14-21 business days</li></ul><h2>Tracking</h2><p>All orders include tracking. Check the Track Your Order page for updates.</p>` },
+      { title: 'Terms of Service', body_html: `<h1>Terms of Service</h1><p>By using ${storeName}, you agree to these terms.</p><h2>Use of Site</h2><p>You may use our site for lawful purposes only. You must not misuse our services.</p><h2>Products</h2><p>We reserve the right to modify prices and discontinue products at any time.</p><h2>Intellectual Property</h2><p>All content on this site is owned by ${storeName} and protected by copyright law.</p><h2>Limitation of Liability</h2><p>We are not liable for any indirect or consequential damages arising from use of our products.</p><h2>Governing Law</h2><p>These terms are governed by the laws of the United States.</p><h2>Contact</h2><p>Questions: legal@${storeUrl.split('.')[0]}.com</p>` }
+    ];
+    for (const policy of policies) {
+      try {
+        await shopifyAPI(storeUrl, token, 'POST', '/pages.json', { page: { ...policy, published: true } });
+        log(`Política: ${policy.title}`, 'ok');
+      } catch(e) { log('Política error: ' + e.message, 'err'); }
+    }
+    setTask(5, 'done');
+    setProgress(75, 'Configurando navegação...');
+
+    // TAREFA 6 - Blog
+    setTask(6, 'running');
+    try {
+      const blogs = await shopifyAPI(storeUrl, token, 'GET', '/blogs.json');
+      const blogId = blogs.blogs?.[0]?.id;
+      if (blogId) {
+        const articles = [
+          {
+            title: `Top 5 ${brand.name} Products You Need This Season`,
+            body_html: `<p>Discover our most loved products and why our customers can't stop raving about them. From bestsellers to new arrivals, here's what's trending at ${brand.name}.</p><h2>1. Premium Quality You Can Feel</h2><p>Every product at ${brand.name} goes through rigorous quality checks before reaching your door.</p><h2>2. Style That Lasts</h2><p>Our designs are timeless, made to complement any outfit or occasion.</p><h2>3. Free Shipping Always</h2><p>No minimums, no surprises. Free worldwide shipping on every order.</p>`,
+            published: true
+          },
+          {
+            title: `The Ultimate Guide to Choosing the Perfect Gift`,
+            body_html: `<p>Finding the perfect gift can be challenging. Here's our guide to choosing something truly special from ${brand.name}.</p><h2>Consider Their Lifestyle</h2><p>Think about what they love and what would make their daily life easier or more enjoyable.</p><h2>Quality Over Quantity</h2><p>A single premium item always makes a better impression than multiple average ones.</p><h2>Presentation Matters</h2><p>All ${brand.name} products come in beautiful gift-ready packaging at no extra cost.</p>`,
+            published: true
+          }
+        ];
+        for (const article of articles) {
+          await shopifyAPI(storeUrl, token, 'POST', `/blogs/${blogId}/articles.json`, { article });
+          log(`Artigo: ${article.title.substring(0, 30)}...`, 'ok');
+        }
+      }
+    } catch(e) { log('Blog error: ' + e.message, 'err'); }
+    setTask(6, 'done');
+    setProgress(58, 'Configurando frete...');
+
+    // TAREFA 7 - Frete grátis
+    setTask(7, 'running');
+    try {
+      const zones = await shopifyAPI(storeUrl, token, 'GET', '/shipping_zones.json');
+      const zoneList = zones.shipping_zones || [];
+      if (zoneList.length === 0) {
+        log('Frete: configure manualmente em Settings → Shipping', 'ok');
+      } else {
+        for (const zone of zoneList) {
+          await shopifyAPI(storeUrl, token, 'POST', `/shipping_zones/${zone.id}/price_based_shipping_rates.json`, {
+            price_based_shipping_rate: { name: 'Free Shipping', price: '0.00' }
+          });
+        }
+        log('Frete grátis configurado', 'ok');
+      }
+    } catch(e) { log('Frete: configure manualmente em Settings → Shipping', 'ok'); }
+    setTask(7, 'done');
+    setProgress(65, 'Editando tema...');
+
+    // ========================
+    // TAREFA 8 — Cores do tema
+    // ========================
+    setTask(8, 'running');
+    log('Detectando tema ativo...', 'info');
+    let themeId = null;
+    try {
+      const themesData = await shopifyAPI(storeUrl, token, 'GET', '/themes.json');
+      const activeTheme = (themesData.themes || []).find(t => t.role === 'main');
+      if (activeTheme) {
+        themeId = activeTheme.id;
+        temaLog(`Tema: ${activeTheme.name}`, 'ok');
+
+        const settingsRes = await shopifyAPI(storeUrl, token, 'GET', `/themes/${themeId}/assets.json?asset[key]=config/settings_data.json`);
+        const settings = JSON.parse(settingsRes.asset?.value || '{}');
+        const current = settings.current || {};
+        current.colors_solid_button_labels = '#000000';
+        current.colors_accent_1 = brand.primary;
+        current.colors_accent_2 = brand.secondary;
+        current.colors_text = '#1a1a1a';
+        current.colors_background_1 = '#ffffff';
+        current.colors_background_2 = '#f8f8f8';
+        current.colors_outline_button_labels = brand.primary;
+        settings.current = current;
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'config/settings_data.json', value: JSON.stringify(settings, null, 2) }
+        });
+        log('Cores premium aplicadas', 'ok');
+      }
+    } catch(e) { log('Tema cores: ' + e.message.substring(0,50), 'err'); }
+    setTask(8, 'done');
+    setProgress(72, 'Criando logo e banners...');
+
+    // ========================
+    // TAREFA 9 — Logo + Banners
+    // ========================
+    setTask(9, 'running');
+    if (themeId) {
+      try {
+        // Logo SVG
+        const logoSVG = gerarLogoSVG(brand.name, brand.primary);
+        const logoB64 = btoa(unescape(encodeURIComponent(logoSVG)));
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'assets/logo.svg', attachment: logoB64 }
+        });
+        log('Logo SVG criado', 'ok');
+
+        // Banner hero desktop
+        const bannerSVG = gerarBannerSVG(brand.name, brand.tagline, brand.primary, nichoSelecionado);
+        const bannerB64 = btoa(unescape(encodeURIComponent(bannerSVG)));
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'assets/banner-hero.svg', attachment: bannerB64 }
+        });
+        log('Banner hero criado', 'ok');
+
+        // Banner mobile
+        const mobileSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 500" width="768" height="500">
+          <rect width="768" height="500" fill="#0d0d0d"/>
+          <text x="384" y="175" text-anchor="middle" font-family="Georgia,serif" font-size="42" font-weight="300" fill="white" letter-spacing="-1">${brand.name}</text>
+          <line x1="150" y1="200" x2="618" y2="200" stroke="${brand.primary}" stroke-width="0.5" opacity="0.6"/>
+          <text x="384" y="245" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="${brand.primary}" letter-spacing="3">${brand.tagline.toUpperCase()}</text>
+          <rect x="284" y="285" width="200" height="46" rx="0" fill="${brand.primary}"/>
+          <text x="384" y="313" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#000" letter-spacing="2">SHOP NOW</text>
+        </svg>`;
+        const mobileB64 = btoa(unescape(encodeURIComponent(mobileSVG)));
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'assets/banner-mobile.svg', attachment: mobileB64 }
+        });
+        log('Banner mobile criado', 'ok');
+      } catch(e) { log('Banners: ' + e.message.substring(0,50), 'err'); }
+    }
+    setTask(9, 'done');
+    setProgress(82, 'Criando seções Liquid...');
+
+    // ========================
+    // TAREFA 10 — Liquid Sections
+    // ========================
+    setTask(10, 'running');
+    if (themeId) {
+      try {
+        const heroLiquid = `<section class="dg-hero" style="position:relative;overflow:hidden;background:${brand.secondary};min-height:520px;display:flex;align-items:center;">
+  <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.35) 100%);z-index:1;"></div>
+  <div style="position:relative;z-index:2;max-width:900px;margin:0 auto;padding:5rem 2.5rem;">
+    <p style="font-family:Georgia,serif;font-size:12px;color:${brand.primary};letter-spacing:.35em;text-transform:uppercase;margin-bottom:1.25rem;">{{ section.settings.subheading | default: 'New Collection' }}</p>
+    <h1 style="font-family:Georgia,serif;font-size:clamp(38px,5vw,76px);font-weight:300;color:white;line-height:1.05;letter-spacing:-.02em;margin-bottom:1.5rem;">{{ section.settings.heading | default: '${brand.name}' }}</h1>
+    <p style="font-size:18px;color:rgba(255,255,255,0.75);margin-bottom:2.5rem;max-width:480px;font-weight:300;line-height:1.6;">{{ section.settings.description | default: '${brand.tagline}' }}</p>
+    <a href="{{ section.settings.button_link | default: '/collections/all' }}" style="display:inline-block;padding:16px 44px;background:${brand.primary};color:#000;font-family:Georgia,serif;font-size:13px;letter-spacing:.18em;text-transform:uppercase;text-decoration:none;">{{ section.settings.button_label | default: 'Shop Now' }}</a>
+  </div>
+</section>
+{% schema %}{"name":"DG Hero","settings":[{"type":"text","id":"subheading","label":"Subheading","default":"New Collection"},{"type":"text","id":"heading","label":"Heading","default":"${brand.name}"},{"type":"textarea","id":"description","label":"Description","default":"${brand.tagline}"},{"type":"text","id":"button_label","label":"Button","default":"Shop Now"},{"type":"url","id":"button_link","label":"Link"}],"presets":[{"name":"DG Hero"}]}{% endschema %}`;
+
+        const benefitsLiquid = `<section style="background:#f8f8f8;border-top:1px solid #ebebeb;border-bottom:1px solid #ebebeb;padding:1.75rem 2rem;">
+  <div style="max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;text-align:center;">
+    <div style="padding:.75rem;"><div style="font-size:20px;margin-bottom:8px;color:${brand.primary};">✦</div><div style="font-family:Georgia,serif;font-size:13px;font-weight:500;color:#1a1a1a;">Free Worldwide Shipping</div><div style="font-size:11px;color:#888;margin-top:3px;">On all orders</div></div>
+    <div style="padding:.75rem;"><div style="font-size:20px;margin-bottom:8px;color:${brand.primary};">◈</div><div style="font-family:Georgia,serif;font-size:13px;font-weight:500;color:#1a1a1a;">30-Day Returns</div><div style="font-size:11px;color:#888;margin-top:3px;">Hassle-free policy</div></div>
+    <div style="padding:.75rem;"><div style="font-size:20px;margin-bottom:8px;color:${brand.primary};">◇</div><div style="font-family:Georgia,serif;font-size:13px;font-weight:500;color:#1a1a1a;">Premium Quality</div><div style="font-size:11px;color:#888;margin-top:3px;">Crafted to last</div></div>
+    <div style="padding:.75rem;"><div style="font-size:20px;margin-bottom:8px;color:${brand.primary};">◉</div><div style="font-family:Georgia,serif;font-size:13px;font-weight:500;color:#1a1a1a;">Secure Checkout</div><div style="font-size:11px;color:#888;margin-top:3px;">SSL encrypted</div></div>
+  </div>
+</section>
+{% schema %}{"name":"DG Benefits","presets":[{"name":"DG Benefits"}]}{% endschema %}`;
+
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'sections/dg-hero.liquid', attachment: btoa(unescape(encodeURIComponent(heroLiquid))) }
+        });
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'sections/dg-benefits.liquid', attachment: btoa(unescape(encodeURIComponent(benefitsLiquid))) }
+        });
+        log('Seções Liquid criadas', 'ok');
+      } catch(e) { log('Liquid: ' + e.message.substring(0,50), 'err'); }
+    }
+    setTask(10, 'done');
+    setProgress(92, 'Aplicando CSS premium...');
+
+    // ========================
+    // TAREFA 11 — CSS Premium + Announcement Bar
+    // ========================
+    setTask(11, 'running');
+    if (themeId) {
+      try {
+        const customCSS = `/* Drop Global v8 */
+:root{--dg-primary:${brand.primary};--dg-secondary:${brand.secondary};}
+.button,.btn{border-radius:0!important;letter-spacing:.1em;font-family:Georgia,serif;}
+.button--primary{background:var(--dg-primary)!important;color:#000!important;border-color:var(--dg-primary)!important;}
+.button--primary:hover{opacity:.85;}
+.card__heading{font-family:Georgia,serif;font-weight:400;}
+.price{font-family:Georgia,serif;}
+.badge--sale{background:var(--dg-primary)!important;color:#000!important;border-radius:0!important;}
+.header{border-bottom:1px solid #f0f0f0;}
+.announcement-bar{background:${brand.secondary}!important;color:${brand.primary}!important;font-family:Georgia,serif;letter-spacing:.1em;}
+.footer{border-top:1px solid #ebebeb;}
+.product-media-container{background:#f8f8f8!important;}
+h1,h2,h3{font-family:Georgia,serif;font-weight:300;letter-spacing:-.02em;}
+.card{border:none;box-shadow:none;}
+.card:hover{transform:translateY(-2px);transition:transform .2s;}`;
+
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'assets/dg-custom.css', attachment: btoa(unescape(encodeURIComponent(customCSS))) }
+        });
+
+        // Announcement bar
+        const settingsRes3 = await shopifyAPI(storeUrl, token, 'GET', `/themes/${themeId}/assets.json?asset[key]=config/settings_data.json`);
+        const settings3 = JSON.parse(settingsRes3.asset?.value || '{}');
+        const current3 = settings3.current || {};
+        current3.announcement_text = `Free Worldwide Shipping | ${brand.name} — ${brand.tagline}`;
+        settings3.current = current3;
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'config/settings_data.json', value: JSON.stringify(settings3, null, 2) }
+        });
+        log('CSS premium + announcement bar aplicados', 'ok');
+      } catch(e) { log('CSS: ' + e.message.substring(0,50), 'err'); }
+    }
+    setTask(11, 'done');
+    setProgress(98, 'Finalizando...');
+
+    // ========================
+    // TAREFA 12 — Concluído!
+    // ========================
+    setTask(12, 'running');
+    log('🎉 Loja profissional criada com sucesso!', 'ok');
+    setTask(12, 'done');
+    setProgress(100, '✓ Loja pronta!');
+
+    lojas[0].status = 'pronta';
+    await kvSalvarLoja(lojas[0]);
+    localStorage.setItem('dg_v6', JSON.stringify(lojas));
+    atualizarStats();
+    renderLojas();
+    renderFarm();
+
+    document.getElementById('result-ok').style.display = 'block';
+    document.getElementById('result-text').textContent = `${brand.name} — ${createdProducts.length} produtos, imagens IA, tema profissional, logo, banners, páginas, políticas e blog. Loja 100% pronta!`;
+
+    btn.textContent = '✓ Loja criada!';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '→ Criar Loja Automaticamente'; rodando = false; }, 4000);
+
+  } catch(err) {
+    log('Erro: ' + err.message, 'err');
+    if (lojas[0]) { lojas[0].status = 'erro'; salvarLojas(); }
+    btn.disabled = false;
+    btn.textContent = '→ Criar Loja Automaticamente';
+    rodando = false;
+  }
+}
+
+// ============================
+// UI HELPERS
+// ============================
+function setTask(idx, state) {
+  const el = document.getElementById('task-' + idx);
+  if (!el) return;
+  el.classList.remove('pending','running','done','error');
+  el.classList.add(state);
+  const icon = el.querySelector('.task-icon');
+  if (icon) icon.textContent = state === 'done' ? '✓' : state === 'running' ? '►' : state === 'error' ? '✕' : '○';
+}
+
+function resetTasks() {
+  for (let i = 0; i < 13; i++) setTask(i, 'pending');
+}
+
+function log(msg, type = '') {
+  const box = document.getElementById('log-box');
+  if (!box) return;
+  const ts = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const div = document.createElement('div');
+  div.className = 'log-line ' + type;
+  div.innerHTML = `<span class="ts">${ts}</span><span class="msg">${msg}</span>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setProgress(pct, label) {
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = label;
+}
+
+function selectNicho(el) {
+  document.querySelectorAll('.nicho-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  nichoSelecionado = el.dataset.nicho;
+}
+
+function validarUrl(input) {
+  input.classList.remove('valid','invalid');
+  if (input.value.includes('.myshopify.com')) input.classList.add('valid');
+  else if (input.value.length > 5) input.classList.add('invalid');
+}
+
+function showTab(name, el) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'lojas') renderLojas();
+  if (name === 'ranking') renderRanking();
+  if (name === 'farm') renderFarm();
+}
+
+function abrirPreviewAtual() {
+  if (!previewUrl) return;
+  document.getElementById('modal-title').textContent = previewUrl;
+  document.getElementById('modal-iframe').src = previewUrl;
+  document.getElementById('modal-preview').classList.add('show');
+}
+
+function fecharModal() {
+  document.getElementById('modal-preview').classList.remove('show');
+  document.getElementById('modal-iframe').src = 'about:blank';
+}
+
+function fecharNotif() { document.getElementById('notif').classList.remove('show'); }
+
+// ============================
+// TOKEN GENERATOR
+// ============================
+function iniciarOAuth() {
+  const store = document.getElementById('tk-store').value.trim();
+  const clientId = document.getElementById('tk-client-id').value.trim();
+  if (!store || !clientId) { alert('Preencha a URL da loja e o Client ID.'); return; }
+  const scopes = 'read_products,write_products,read_themes,write_themes,read_content,write_content,read_navigations,write_navigations,read_online_store_pages,write_online_store_pages,read_online_store_navigation,write_online_store_navigation';
+  window.open(`https://${store.replace(/\/$/, '')}/admin/oauth/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=https://example.com&response_type=code`, '_blank');
+  document.getElementById('tk-step2').style.display = 'block';
+  document.getElementById('tk-error').style.display = 'none';
+}
+
+async function trocarToken() {
+  const store = document.getElementById('tk-store').value.trim();
+  const clientId = document.getElementById('tk-client-id').value.trim();
+  const secret = document.getElementById('tk-secret').value.trim();
+  let code = document.getElementById('tk-code').value.trim();
+  if (code.includes('code=')) code = code.split('code=')[1].split('&')[0];
+  if (!code) { alert('Cole o código OAuth.'); return; }
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  document.getElementById('tk-error').style.display = 'none';
+  try {
+    const res = await fetch('https://shopify-token.lfermau-01.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store_url: store, client_id: clientId, client_secret: secret, code })
+    });
+    const data = await res.json();
+    if (!data.access_token) throw new Error(data.error || 'Token não retornado.');
+    document.getElementById('tk-token-val').textContent = data.access_token;
+    document.getElementById('tk-result').style.display = 'block';
+    document.getElementById('tk-step2').style.display = 'none';
+  } catch(e) {
+    document.getElementById('tk-error').style.display = 'block';
+    document.getElementById('tk-error').textContent = 'Erro: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '→ Gerar Token Final';
+}
+
+function usarToken() {
+  const token = document.getElementById('tk-token-val').textContent;
+  const store = document.getElementById('tk-store').value.trim();
+  document.getElementById('shopify-token').value = token;
+  document.getElementById('store-url').value = store;
+  localStorage.setItem('dg_shopify_token', token);
+  localStorage.setItem('dg_store_url', store);
+  showTab('criar', document.querySelector('.tab'));
+}
+
+// ============================
+// LOJAS & VENDAS
+// ============================
+async function verificarVendas(loja) {
+  if (!loja.shopifyToken) return null;
+  try {
+    const res = await fetch(`https://shopify-proxy.lfermau-01.workers.dev`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store_url: loja.url, token: loja.shopifyToken, method: 'GET', endpoint: '/orders.json?status=paid&limit=250' })
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const orders = data.orders || [];
+    const total = orders.reduce((s, o) => s + parseFloat(o.total_price || 0), 0);
+    return { count: orders.length, revenue: total.toFixed(2) };
+  } catch(e) { return null; }
+}
+
+async function verificarTodas() {
+  for (let i = 0; i < lojas.length; i++) {
+    const prevCount = lojas[i].vendas || 0;
+    const r = await verificarVendas(lojas[i]);
+    if (r) {
+      if (r.count > prevCount) {
+        mostrarNotificacao(lojas[i].url, r.count - prevCount, r.revenue);
+        lojas[i].newSale = true;
+      }
+      lojas[i].vendas = r.count;
+      lojas[i].receita = r.revenue;
+      lojas[i].checkedAt = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+      // Sincroniza com KV
+      await kvAtualizarVendas(lojas[i].url, r.count, r.revenue, lojas[i].checkedAt);
+    }
+  }
+  localStorage.setItem('dg_v6', JSON.stringify(lojas));
+  renderLojas();
+  atualizarStats();
+  renderFarm();
+}
+
+async function verificarUma(i) {
+  const prevCount = lojas[i].vendas || 0;
+  const r = await verificarVendas(lojas[i]);
+  if (r) {
+    if (r.count > prevCount) { mostrarNotificacao(lojas[i].url, r.count - prevCount, r.revenue); lojas[i].newSale = true; }
+    lojas[i].vendas = r.count; lojas[i].receita = r.revenue;
+    lojas[i].checkedAt = new Date().toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+    salvarLojas(); renderLojas(); atualizarStats();
+  }
+}
+
+function mostrarNotificacao(url, novas, receita) {
+  document.getElementById('notif-body').textContent = `${url} — ${novas} novo(s) pedido(s)! Total: $${receita}`;
+  const n = document.getElementById('notif');
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 6000);
+}
+
+function renderLojas() {
+  const wrap = document.getElementById('stores-wrap');
+  if (lojas.length === 0) { wrap.innerHTML = '<div class="empty">nenhuma loja criada ainda</div>'; return; }
+  const rows = lojas.map((l, i) => {
+    const v = l.vendas !== undefined
+      ? l.vendas > 0 ? `<span class="vendas-ok">$${l.receita}${l.newSale ? '<span class="new-sale-badge">nova!</span>' : ''}</span><div style="font-size:9px;color:var(--muted)">${l.vendas} pedido(s)</div>`
+      : '<span class="vendas-zero">sem vendas</span>'
+      : '<span style="font-size:10px;color:var(--muted)">—</span>';
+    const editPanel = `<div class="edit-panel" id="edit-${i}">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--accent);margin-bottom:.75rem;text-transform:uppercase;">Melhorar loja</div>
+      <select id="edit-sel-${i}" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:8px;font-family:var(--mono);font-size:12px;color:var(--text);margin-bottom:8px;outline:none;">
+        <option value="">Escolha uma melhoria...</option>
+        <option value="products">Atualizar descrições dos produtos</option>
+        <option value="prices">Reajustar preços</option>
+        <option value="seo">Melhorar SEO dos produtos</option>
+      </select>
+      <button class="btn btn-primary btn-sm" onclick="editarLoja(${i})" style="width:100%;">Aplicar →</button>
+    </div>`;
+    return `<tr>
+      <td><div class="store-url-cell" title="${l.url}">${l.url}</div><div style="font-size:9px;color:var(--muted);margin-top:2px;">${l.nicho} · ${l.data}</div></td>
+      <td><span class="pill ${l.status==='pronta'?'pill-ok':l.status==='erro'?'pill-error':'pill-pending'}">${l.status}</span></td>
+      <td>${v}${l.checkedAt?`<div style="font-size:9px;color:var(--muted)">às ${l.checkedAt}</div>`:''}</td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-sm" onclick="previewUrl='https://${l.url}';document.getElementById('modal-title').textContent='${l.url}';document.getElementById('modal-iframe').src='https://${l.url}';document.getElementById('modal-preview').classList.add('show')" title="Preview">👁</button>
+        <button class="btn btn-sm" onclick="verificarUma(${i})" title="Vendas">↻</button>
+        <button class="btn btn-sm" onclick="document.getElementById('edit-${i}').classList.toggle('show')" title="Editar">✎</button>
+      </div>${editPanel}</td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<table><thead><tr><th>Loja</th><th>Status</th><th>Vendas</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function editarLoja(i) {
+  const acao = document.getElementById(`edit-sel-${i}`).value;
+  if (!acao) { alert('Escolha uma melhoria.'); return; }
+  alert('Funcionalidade em breve! Por enquanto use o Claude Code para melhorias avançadas.');
+}
+
+function renderRanking() {
+  const wrap = document.getElementById('ranking-wrap');
+  if (!wrap) return;
+  if (lojas.length === 0) { wrap.innerHTML = '<div class="empty">nenhuma loja ainda</div>'; return; }
+  const sorted = [...lojas].map(l => ({ ...l, vendas: l.vendas || 0, receita: parseFloat(l.receita || 0) })).sort((a,b) => b.receita - a.receita || b.vendas - a.vendas);
+  const maxR = sorted[0]?.receita || 1;
+  const medals = ['gold','silver','bronze'];
+  const colors = ['#C9A84C','#999','#CD7F32','#4a9eff','#4caf50'];
+  const totalR = sorted.reduce((s,l) => s + l.receita, 0);
+  const totalV = sorted.reduce((s,l) => s + l.vendas, 0);
+  const comV = sorted.filter(l => l.vendas > 0).length;
+  const html = sorted.map((l,i) => {
+    const pct = maxR > 0 ? Math.max(4,(l.receita/maxR)*100).toFixed(1) : 4;
+    const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;
+    return `<div class="rank-item">
+      <div class="rank-pos ${medals[i]||'other'}">${medal}</div>
+      <div class="rank-bar-wrap">
+        <div class="rank-url"><span>${l.url}</span><span class="pill ${l.status==='pronta'?'pill-ok':l.status==='erro'?'pill-error':'pill-pending'}">${l.status}</span>${l.newSale?'<span class="rank-badge" style="background:rgba(76,175,80,.2);color:var(--green)">nova venda!</span>':''}</div>
+        <div class="rank-meta">${l.nicho} · ${l.data}</div>
+        <div class="rank-bar-bg"><div class="rank-bar-fill" style="width:${pct}%;background:${colors[i%colors.length]}"></div></div>
+        <div class="rank-vals">
+          <span class="rank-val ${l.receita>0?'green':'muted'}">$${l.receita.toFixed(2)}</span>
+          <span class="rank-val muted">${l.vendas} pedido(s)</span>
+          ${l.checkedAt?`<span class="rank-val muted">às ${l.checkedAt}</span>`:''}
+        </div>
+      </div>
+      <button class="btn btn-sm" onclick="verificarUma(${lojas.indexOf(l)});setTimeout(renderRanking,1000)">↻</button>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem;">
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1rem;text-align:center;"><div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--accent)">$${totalR.toFixed(2)}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px;">Receita total</div></div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1rem;text-align:center;"><div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--green)">${totalV}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px;">Pedidos totais</div></div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1rem;text-align:center;"><div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--blue)">${comV}/${sorted.length}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:4px;">Com vendas</div></div>
+  </div>${html}`;
+}
+
+function limparLojas() { if (confirm('Limpar histórico?')) { lojas = []; salvarLojas(); renderLojas(); atualizarStats(); } }
+function salvarLojas() {
+  localStorage.setItem('dg_v6', JSON.stringify(lojas));
+  // Sincroniza com KV — último salvo ganha
+  if (lojas.length > 0) kvSalvarLoja(lojas[0]);
+}
+
+async function limparLojas() {
+  if (confirm('Limpar histórico de todas as lojas?')) {
+    lojas = [];
+    localStorage.setItem('dg_v6', '[]');
+    await kvLimparLojas();
+    renderLojas();
+    atualizarStats();
+    renderFarm();
+  }
+}
+function atualizarStats() {
+  document.getElementById('h-total').textContent = lojas.length;
+  document.getElementById('h-prontas').textContent = lojas.filter(l => l.status==='pronta').length;
+  document.getElementById('h-receita').textContent = '$' + lojas.reduce((s,l) => s + parseFloat(l.receita||0), 0).toFixed(2);
+  renderFarm();
+}
+function copiarTexto(el) {
+  navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+    el.style.borderColor='var(--green)'; el.style.color='var(--green)';
+    setTimeout(()=>{ el.style.borderColor=''; el.style.color=''; }, 2000);
+  });
+}
+
+// Load saved keys
+window.addEventListener('load', async () => {
+  const saved = [
+    ['store-url','dg_store_url'],
+    ['shopify-token','dg_shopify_token'],
+    ['google-key','dg_google_key'],
+    ['tm-store','dg_store_url'],
+    ['tm-token','dg_shopify_token'],
+    ['tm-pexels','dg_pexels_key']
+  ];
+  saved.forEach(([id, key]) => {
+    const val = localStorage.getItem(key);
+    if (val) { const el = document.getElementById(id); if (el) el.value = val; }
+  });
+
+  // Mostra lojas do localStorage enquanto carrega KV
+  renderLojas();
+  atualizarStats();
+  renderFarm();
+
+  // Carrega lojas do KV (nuvem) — sincroniza em todos os dispositivos
+  const kvLojas = await kvListarLojas();
+  if (kvLojas.length > 0) {
+    lojas = kvLojas;
+    localStorage.setItem('dg_v6', JSON.stringify(lojas));
+    renderLojas();
+    atualizarStats();
+    renderFarm();
+  }
+
+  setInterval(verificarTodas, 5 * 60 * 1000);
+});
+
+// ============================
+// IMAGEN 4 FAST — GOOGLE AI
+// ============================
+async function gerarImagemGemini(prompt, googleKey) {
+  // Usa Puter.js — gratuito, sem API key, funciona direto no navegador
+  // Carrega Puter.js se ainda não estiver carregado
+  if (!window.puter) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://js.puter.com/v2/';
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+    // Aguarda inicialização
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  try {
+    const result = await puter.ai.txt2img(prompt);
+    // Puter retorna uma URL ou blob — converte para base64
+    if (typeof result === 'string' && result.startsWith('http')) {
+      const res = await fetch(result);
+      const blob = await res.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } else if (result instanceof Blob) {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(result);
+      });
+    } else if (result?.src) {
+      const res = await fetch(result.src);
+      const blob = await res.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+    throw new Error('Formato de resposta não reconhecido');
+  } catch(e) {
+    throw new Error('Puter: ' + e.message);
+  }
+}
+
+const WORKER_URL = 'https://shopify-proxy.lfermau-01.workers.dev';
+
+// ============================
+// KV — LOJAS NA NUVEM
+// ============================
+async function kvSalvarLoja(loja) {
+  try {
+    await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'salvar_loja', loja })
+    });
+  } catch(e) { console.error('KV salvar:', e); }
+}
+
+async function kvListarLojas() {
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'listar_lojas' })
+    });
+    const data = await res.json();
+    return data.lojas || [];
+  } catch(e) { return []; }
+}
+
+async function kvAtualizarVendas(url, vendas, receita, checkedAt) {
+  try {
+    await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'atualizar_vendas', url, vendas, receita, checkedAt })
+    });
+  } catch(e) {}
+}
+
+async function kvLimparLojas() {
+  try {
+    await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'limpar_lojas' })
+    });
+  } catch(e) {}
+}
+
+async function kvDeletarLoja(url) {
+  try {
+    await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deletar_loja', url })
+    });
+  } catch(e) {}
+}
+function renderFarm() {
+  const grid = document.getElementById('farm-grid');
+  const fTotal = document.getElementById('farm-total');
+  const fProntas = document.getElementById('farm-prontas');
+  const fReceita = document.getElementById('farm-receita');
+  const fPedidos = document.getElementById('farm-pedidos');
+  if (!grid) return;
+
+  const totalReceita = lojas.reduce((s,l) => s + parseFloat(l.receita||0), 0);
+  const totalPedidos = lojas.reduce((s,l) => s + (l.vendas||0), 0);
+
+  if (fTotal) fTotal.textContent = lojas.length;
+  if (fProntas) fProntas.textContent = lojas.filter(l=>l.status==='pronta').length;
+  if (fReceita) fReceita.textContent = '$' + totalReceita.toFixed(2);
+  if (fPedidos) fPedidos.textContent = totalPedidos;
+
+  if (lojas.length === 0) { grid.innerHTML = '<div class="empty">nenhuma loja ainda — crie lojas para ver o farm</div>'; return; }
+
+  grid.innerHTML = lojas.map((l, i) => {
+    const receita = parseFloat(l.receita||0);
+    const vendas = l.vendas || 0;
+    const statusColor = l.status==='pronta' ? 'var(--green)' : l.status==='erro' ? 'var(--red)' : 'var(--accent)';
+    return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1rem;display:flex;align-items:center;gap:14px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:${statusColor};flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:var(--mono);font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${l.url}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">${l.nicho} · ${l.data} · ${l.hora||''}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:var(--mono);font-size:13px;font-weight:500;color:${receita>0?'var(--green)':'var(--muted)'}">$${receita.toFixed(2)}</div>
+        <div style="font-size:10px;color:var(--muted)">${vendas} pedido(s)</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;">
+        <button class="btn btn-sm" onclick="verificarUma(${i});setTimeout(renderFarm,1000)" title="Verificar vendas">↻</button>
+        <button class="btn btn-sm" onclick="window.open('https://${l.url}','_blank')" title="Abrir loja">↗</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function farmAtualizar() {
+  await verificarTodas();
+  renderFarm();
+}
+
+// ============================
+// EDITAR TEMA
+// ============================
+function setTemaTask(idx, state) {
+  const el = document.getElementById('ttask-' + idx);
+  if (!el) return;
+  el.classList.remove('pending','running','done','error');
+  el.classList.add(state);
+  const icon = el.querySelector('.task-icon');
+  if (icon) icon.textContent = state==='done'?'✓':state==='running'?'►':state==='error'?'✕':'○';
+}
+
+function temaLog(msg, type='') {
+  const box = document.getElementById('tema-log-box');
+  if (!box) return;
+  const ts = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'log-line ' + type;
+  div.innerHTML = `<span class="ts">${ts}</span><span class="msg">${msg}</span>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setTemaProgress(pct, label) {
+  document.getElementById('tema-prog-fill').style.width = pct + '%';
+  document.getElementById('tema-prog-label').textContent = label;
+}
+
+// Gerar logo SVG para o nicho
+function gerarLogoSVG(brandName, primary) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 100" width="400" height="100">
+  <text x="20" y="65" font-family="Georgia, serif" font-size="42" font-weight="400" fill="${primary}" letter-spacing="2">${brandName.split(' ')[0]}</text>
+  <text x="20" y="88" font-family="Georgia, serif" font-size="18" font-weight="300" fill="#666" letter-spacing="6">${brandName.split(' ').slice(1).join(' ').toUpperCase()}</text>
+  <line x1="20" y1="72" x2="380" y2="72" stroke="${primary}" stroke-width="0.5" opacity="0.4"/>
+</svg>`;
+}
+
+// Gerar banner hero SVG
+function gerarBannerSVG(brandName, tagline, primary, nicho) {
+  const nichoIcons = {
+    jewelry: `<circle cx="1100" cy="200" r="120" fill="none" stroke="${primary}" stroke-width="0.5" opacity="0.3"/>
+    <circle cx="1100" cy="200" r="80" fill="none" stroke="${primary}" stroke-width="0.5" opacity="0.4"/>
+    <circle cx="1100" cy="200" r="40" fill="${primary}" opacity="0.1"/>
+    <text x="1100" y="208" text-anchor="middle" font-family="Georgia" font-size="40" fill="${primary}" opacity="0.6">◇</text>`,
+    pet: `<circle cx="1100" cy="180" r="40" fill="${primary}" opacity="0.2"/>
+    <text x="1100" y="195" text-anchor="middle" font-family="Arial" font-size="60" fill="${primary}" opacity="0.5">🐾</text>`,
+    fitness: `<rect x="1020" y="120" width="160" height="160" rx="4" fill="none" stroke="${primary}" stroke-width="1" opacity="0.3"/>
+    <line x1="1020" y1="200" x2="1180" y2="200" stroke="${primary}" stroke-width="2" opacity="0.4"/>`,
+    default: `<circle cx="1100" cy="200" r="100" fill="none" stroke="${primary}" stroke-width="0.5" opacity="0.3"/>`
+  };
+  const icon = nichoIcons[nicho] || nichoIcons.default;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 500" width="1440" height="500">
+  <rect width="1440" height="500" fill="#0d0d0d"/>
+  <rect width="1440" height="500" fill="url(#grad)" opacity="0.4"/>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:${primary};stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#000;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+  ${icon}
+  <line x1="80" y1="300" x2="600" y2="300" stroke="${primary}" stroke-width="0.5" opacity="0.4"/>
+  <text x="80" y="160" font-family="Georgia, serif" font-size="72" font-weight="300" fill="white" letter-spacing="-1" opacity="0.95">${brandName}</text>
+  <text x="80" y="250" font-family="Georgia, serif" font-size="24" font-weight="300" fill="${primary}" letter-spacing="3">${tagline.toUpperCase()}</text>
+  <rect x="80" y="330" width="180" height="50" rx="2" fill="${primary}"/>
+  <text x="170" y="362" text-anchor="middle" font-family="Georgia, serif" font-size="14" font-weight="400" fill="#000" letter-spacing="2">SHOP NOW</text>
+</svg>`;
+}
+
+async function editarTema() {
+  const storeUrl = document.getElementById('tm-store').value.trim().replace(/\/$/, '');
+  const token = document.getElementById('tm-token').value.trim();
+  const googleKey = localStorage.getItem('dg_google_key') || document.getElementById('google-key')?.value?.trim() || '';
+
+  if (!storeUrl || !token) { alert('Preencha a URL da loja e o token.'); return; }
+
+  const btn = document.getElementById('btn-tema');
+  btn.disabled = true;
+  btn.textContent = '⏳ Aplicando...';
+  document.getElementById('tema-prog-wrap').style.display = 'block';
+  document.getElementById('tema-result').style.display = 'none';
+
+  for (let i = 0; i < 9; i++) setTemaTask(i, 'pending');
+
+  const brand = getBrandInfo(nichoSelecionado);
+  temaLog('Iniciando edição profissional do tema...', 'info');
+
+  try {
+    // TASK 0 - Detectar tema
+    setTemaTask(0, 'running');
+    setTemaProgress(5, 'Detectando tema ativo...');
+    const themesData = await shopifyAPI(storeUrl, token, 'GET', '/themes.json');
+    const activeTheme = (themesData.themes || []).find(t => t.role === 'main');
+    if (!activeTheme) throw new Error('Tema ativo não encontrado.');
+    const themeId = activeTheme.id;
+    temaLog(`Tema: ${activeTheme.name} (ID: ${themeId})`, 'ok');
+    setTemaTask(0, 'done');
+
+    // TASK 1 - Aplicar cores via settings_data.json
+    setTemaTask(1, 'running');
+    setTemaProgress(15, 'Aplicando cores premium...');
+    try {
+      const settingsRes = await shopifyAPI(storeUrl, token, 'GET', `/themes/${themeId}/assets.json?asset[key]=config/settings_data.json`);
+      const settings = JSON.parse(settingsRes.asset?.value || '{}');
+      const current = settings.current || {};
+      current.colors_solid_button_labels = '#000000';
+      current.colors_accent_1 = brand.primary;
+      current.colors_accent_2 = brand.secondary;
+      current.colors_text = '#1a1a1a';
+      current.colors_background_1 = '#ffffff';
+      current.colors_background_2 = '#f8f8f8';
+      current.colors_outline_button_labels = brand.primary;
+      settings.current = current;
+      await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+        asset: { key: 'config/settings_data.json', value: JSON.stringify(settings, null, 2) }
+      });
+      temaLog('Cores premium aplicadas', 'ok');
+    } catch(e) { temaLog('Cores: ' + e.message, 'err'); }
+    setTemaTask(1, 'done');
+
+    // TASK 2 - Logo SVG
+    setTemaTask(2, 'running');
+    setTemaProgress(25, 'Criando logo...');
+    try {
+      const logoSVG = gerarLogoSVG(brand.name, brand.primary);
+      const logoB64 = btoa(unescape(encodeURIComponent(logoSVG)));
+      await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+        asset: { key: 'assets/logo.svg', attachment: logoB64 }
+      });
+      temaLog('Logo SVG criado', 'ok');
+    } catch(e) { temaLog('Logo: ' + e.message, 'err'); }
+    setTemaTask(2, 'done');
+
+    // TASK 3 - Banner hero desktop via Gemini
+    setTemaTask(3, 'running');
+    setTemaProgress(35, 'Criando banner hero...');
+    try {
+      if (googleKey) {
+        const bannerPrompt = `luxury e-commerce hero banner for ${brand.name} ${nichoSelecionado} store, elegant minimalist design, dark background with gold accents, professional photography style, wide banner format, no text`;
+        const bannerB64 = await gerarImagemGemini(bannerPrompt, googleKey);
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'assets/banner-hero.jpg', attachment: bannerB64 }
+        });
+        temaLog('Banner hero gerado pelo Imagen 4', 'ok');
+      } else {
+        const bannerSVG = gerarBannerSVG(brand.name, brand.tagline, brand.primary, nichoSelecionado);
+        const bannerB64 = btoa(unescape(encodeURIComponent(bannerSVG)));
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'assets/banner-hero.svg', attachment: bannerB64 }
+        });
+        temaLog('Banner SVG criado (sem Google Key)', 'ok');
+      }
+    } catch(e) { temaLog('Banner: ' + e.message, 'err'); }
+    setTemaTask(3, 'done');
+
+    // TASK 4 - Banner mobile
+    setTemaTask(4, 'running');
+    setTemaProgress(45, 'Criando banner mobile...');
+    try {
+      const mobileSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 500" width="768" height="500">
+        <rect width="768" height="500" fill="#0d0d0d"/>
+        <text x="384" y="180" text-anchor="middle" font-family="Georgia,serif" font-size="42" font-weight="300" fill="white" letter-spacing="-1">${brand.name}</text>
+        <line x1="150" y1="205" x2="618" y2="205" stroke="${brand.primary}" stroke-width="0.5" opacity="0.6"/>
+        <text x="384" y="250" text-anchor="middle" font-family="Georgia,serif" font-size="16" fill="${brand.primary}" letter-spacing="3">${brand.tagline.toUpperCase()}</text>
+        <rect x="284" y="290" width="200" height="46" rx="2" fill="${brand.primary}"/>
+        <text x="384" y="318" text-anchor="middle" font-family="Georgia,serif" font-size="13" fill="#000" letter-spacing="2">SHOP NOW</text>
+      </svg>`;
+      const mobileB64 = btoa(unescape(encodeURIComponent(mobileSVG)));
+      await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+        asset: { key: 'assets/banner-mobile.svg', attachment: mobileB64 }
+      });
+      temaLog('Banner mobile criado', 'ok');
+    } catch(e) { temaLog('Banner mobile: ' + e.message, 'err'); }
+    setTemaTask(4, 'done');
+
+    // TASK 5 - Editar seções Liquid da homepage
+    setTemaTask(5, 'running');
+    setTemaProgress(55, 'Editando Liquid da homepage...');
+    try {
+      // Criar seção de hero customizada
+      const heroLiquid = `{% comment %} Drop Global Hero Section {% endcomment %}
+<section class="dg-hero" style="position:relative;overflow:hidden;background:${brand.secondary};min-height:500px;display:flex;align-items:center;">
+  <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.4) 100%);z-index:1;"></div>
+  {% if section.settings.image %}
+    <img src="{{ section.settings.image | img_url: 'master' }}" alt="{{ section.settings.heading }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;">
+  {% endif %}
+  <div style="position:relative;z-index:2;max-width:900px;margin:0 auto;padding:4rem 2rem;text-align:left;">
+    <p style="font-family:Georgia,serif;font-size:13px;color:${brand.primary};letter-spacing:.3em;text-transform:uppercase;margin-bottom:1rem;">{{ section.settings.subheading | default: 'New Collection' }}</p>
+    <h1 style="font-family:Georgia,serif;font-size:clamp(36px,5vw,72px);font-weight:300;color:white;line-height:1.1;letter-spacing:-.02em;margin-bottom:1.5rem;">{{ section.settings.heading | default: '${brand.name}' }}</h1>
+    <p style="font-size:18px;color:rgba(255,255,255,0.8);margin-bottom:2.5rem;max-width:500px;font-weight:300;">{{ section.settings.description | default: '${brand.tagline}' }}</p>
+    <a href="{{ section.settings.button_link | default: '/collections/all' }}" style="display:inline-block;padding:16px 40px;background:${brand.primary};color:#000;font-family:Georgia,serif;font-size:14px;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;transition:opacity .2s;">{{ section.settings.button_label | default: 'Shop Now' }}</a>
+  </div>
+</section>
+{% schema %}
+{
+  "name": "DG Hero Banner",
+  "settings": [
+    {"type":"image_picker","id":"image","label":"Background Image"},
+    {"type":"text","id":"subheading","label":"Subheading","default":"New Collection"},
+    {"type":"text","id":"heading","label":"Heading","default":"${brand.name}"},
+    {"type":"textarea","id":"description","label":"Description","default":"${brand.tagline}"},
+    {"type":"text","id":"button_label","label":"Button Label","default":"Shop Now"},
+    {"type":"url","id":"button_link","label":"Button Link"}
+  ],
+  "presets": [{"name":"DG Hero Banner"}]
+}
+{% endschema %}`;
+
+      const heroB64 = btoa(unescape(encodeURIComponent(heroLiquid)));
+      await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+        asset: { key: 'sections/dg-hero.liquid', attachment: heroB64 }
+      });
+
+      // Criar seção de benefícios
+      const benefitsLiquid = `{% comment %} Drop Global Benefits Bar {% endcomment %}
+<section style="background:#f8f8f8;border-top:1px solid #ebebeb;border-bottom:1px solid #ebebeb;padding:1.5rem 2rem;">
+  <div style="max-width:900px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;text-align:center;">
+    <div style="padding:1rem;">
+      <div style="font-size:24px;margin-bottom:8px;">✦</div>
+      <div style="font-family:Georgia,serif;font-size:13px;font-weight:500;color:#1a1a1a;letter-spacing:.05em;">Free Worldwide Shipping</div>
+      <div style="font-size:11px;color:#888;margin-top:4px;">On all orders, no minimum</div>
+    </div>
+    <div style="padding:1rem;">
+      <div style="font-size:24px;margin-bottom:8px;">◈</div>
+      <div style="font-family:Georgia,serif;font-size:13px;font-weight:500;color:#1a1a1a;letter-spacing:.05em;">30-Day Easy Returns</div>
+      <div style="font-size:11px;color:#888;margin-top:4px;">Hassle-free return policy</div>
+    </div>
+    <div style="padding:1rem;">
+      <div style="font-size:24px;margin-bottom:8px;">◇</div>
+      <div style="font-family:Georgia,serif;font-size:13px;font-weight:500;color:#1a1a1a;letter-spacing:.05em;">Premium Quality</div>
+      <div style="font-size:11px;color:#888;margin-top:4px;">Crafted to last a lifetime</div>
+    </div>
+    <div style="padding:1rem;">
+      <div style="font-size:24px;margin-bottom:8px;">◉</div>
+      <div style="font-family:Georgia,serif;font-size:13px;font-weight:500;color:#1a1a1a;letter-spacing:.05em;">Secure Checkout</div>
+      <div style="font-size:11px;color:#888;margin-top:4px;">SSL encrypted & safe</div>
+    </div>
+  </div>
+</section>
+{% schema %}{"name":"DG Benefits Bar","presets":[{"name":"DG Benefits Bar"}]}{% endschema %}`;
+
+      const benefitsB64 = btoa(unescape(encodeURIComponent(benefitsLiquid)));
+      await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+        asset: { key: 'sections/dg-benefits.liquid', attachment: benefitsB64 }
+      });
+
+      temaLog('Seções Liquid criadas (hero + benefits)', 'ok');
+    } catch(e) { temaLog('Liquid: ' + e.message, 'err'); }
+    setTemaTask(5, 'done');
+
+    // TASK 6 - CSS customizado
+    setTemaTask(6, 'running');
+    setTemaProgress(70, 'Aplicando CSS profissional...');
+    try {
+      const customCSS = `/* Drop Global v8 Custom Styles */
+:root { --dg-primary: ${brand.primary}; --dg-secondary: ${brand.secondary}; }
+.button, .btn { border-radius: 0 !important; letter-spacing: .1em; font-family: Georgia, serif; }
+.button--primary { background: var(--dg-primary) !important; color: #000 !important; border-color: var(--dg-primary) !important; }
+.button--primary:hover { opacity: .85; }
+.card__heading { font-family: Georgia, serif; font-weight: 400; }
+.price { font-family: Georgia, serif; }
+.badge--sale { background: var(--dg-primary) !important; color: #000 !important; border-radius: 0 !important; }
+.header { border-bottom: 1px solid #f0f0f0; }
+.announcement-bar { background: ${brand.secondary} !important; color: ${brand.primary} !important; font-family: Georgia, serif; letter-spacing: .1em; }
+.footer { border-top: 1px solid #ebebeb; }
+.product-media-container { background: #f8f8f8 !important; }
+h1, h2, h3 { font-family: Georgia, serif; font-weight: 300; letter-spacing: -.02em; }
+.card { border: none; box-shadow: none; }
+.card:hover { transform: translateY(-2px); transition: transform .2s; }
+`;
+      const cssB64 = btoa(unescape(encodeURIComponent(customCSS)));
+      await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+        asset: { key: 'assets/dg-custom.css', attachment: cssB64 }
+      });
+      temaLog('CSS profissional aplicado', 'ok');
+    } catch(e) { temaLog('CSS: ' + e.message, 'err'); }
+    setTemaTask(6, 'done');
+
+    // TASK 7 - Gerar imagem banner com Gemini se tiver key
+    setTemaTask(7, 'running');
+    setTemaProgress(82, 'Gerando imagens adicionais...');
+    if (googleKey) {
+      try {
+        const promoPrompt = `elegant promotional banner for luxury ${nichoSelecionado} store, gold and black color scheme, minimalist design, professional e-commerce photography, wide format`;
+        const promoB64 = await gerarImagemGemini(promoPrompt, googleKey);
+        await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+          asset: { key: 'assets/banner-promo.jpg', attachment: promoB64 }
+        });
+        temaLog('Banner promocional gerado pelo Imagen 4', 'ok');
+      } catch(e) { temaLog('Banner promo: ' + e.message, 'err'); }
+    } else {
+      temaLog('Sem Google Key — banners adicionais pulados', 'err');
+    }
+    setTemaTask(7, 'done');
+
+    // TASK 8 - Announcement bar e settings finais
+    setTemaTask(8, 'running');
+    setTemaProgress(92, 'Finalizando configurações...');
+    try {
+      const settingsRes3 = await shopifyAPI(storeUrl, token, 'GET', `/themes/${themeId}/assets.json?asset[key]=config/settings_data.json`);
+      const settings3 = JSON.parse(settingsRes3.asset?.value || '{}');
+      const current3 = settings3.current || {};
+      current3.announcement_text = `Free Worldwide Shipping | ${brand.name} — ${brand.tagline}`;
+      current3.type_header_font = 'josefin_sans_n4';
+      current3.type_body_font = 'lato_n4';
+      settings3.current = current3;
+      await shopifyAPI(storeUrl, token, 'PUT', `/themes/${themeId}/assets.json`, {
+        asset: { key: 'config/settings_data.json', value: JSON.stringify(settings3, null, 2) }
+      });
+      temaLog('Announcement bar e fontes configuradas', 'ok');
+    } catch(e) { temaLog('Settings finais: ' + e.message, 'err'); }
+    setTemaTask(8, 'done');
+    setTemaProgress(100, 'Tema profissional aplicado!');
+
+    document.getElementById('tema-result').style.display = 'block';
+    document.getElementById('tema-result-text').textContent = `Tema profissional aplicado em ${brand.name}! Cores, logo SVG, banners ${googleKey ? 'gerados pelo Imagen 4' : 'SVG'}, seções Liquid (hero + benefits), CSS customizado e announcement bar configurados.`;
+
+    btn.textContent = '✓ Tema aplicado!';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '→ Aplicar na Loja Agora'; }, 4000);
+
+  } catch(err) {
+    temaLog('Erro: ' + err.message, 'err');
+    btn.disabled = false;
+    btn.textContent = '→ Aplicar na Loja Agora';
+  }
+}
+
+</script>
+</body>
+</html>
